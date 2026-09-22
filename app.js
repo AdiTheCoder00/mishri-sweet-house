@@ -43,7 +43,13 @@
     document.body.classList.toggle("no-scroll", open);
     if (open) mobileMenu.querySelector("a").focus();
   }
-  menuBtn.addEventListener("click", () => { untuck(); setMenu(mobileMenu.hidden); });
+  menuBtn.addEventListener("click", () => {
+    if (mobileMenu.hidden) {
+      closeCart();
+      closeWishlist();
+    }
+    setMenu(mobileMenu.hidden);
+  });
   mobileMenu.addEventListener("click", (e) => { if (e.target.closest("a")) setMenu(false); });
   document.addEventListener("click", (e) => {
     if (!mobileMenu.hidden && !e.target.closest(".island") && !e.target.closest(".menu")) setMenu(false);
@@ -196,7 +202,7 @@
   }
 
   function openCart() {
-    untuck();
+    closeWishlist();
     flagSlide(drawer);
     drawer.classList.add("is-open");
     drawer.inert = false;
@@ -306,7 +312,6 @@
   }
 
   function openWishlist() {
-    untuck();
     flagSlide(wishDrawer);
     wishDrawer.classList.add("is-open");
     wishDrawer.inert = false;

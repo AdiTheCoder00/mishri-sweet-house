@@ -312,6 +312,17 @@ main { padding-bottom: 30px; }
 .island-links a:hover { color: var(--ink); background: var(--shell); }
 @media (min-width: 900px) { .island-links { display: flex; } }
 .island-actions { display: flex; gap: 2px; }
+@media (max-width: 599px) {
+  .island {
+    width: calc(100% - 20px);
+    max-width: none;
+    gap: 4px;
+    padding: 0 6px 0 8px;
+  }
+  .brand { gap: 7px; font-size: 1rem; }
+  .brand-mark { width: 32px; height: 32px; }
+  .island-actions { margin-left: auto; }
+}
 
 /* Hamburger that morphs into a cross */
 .burger { display: inline-grid; }
@@ -438,12 +449,21 @@ main { padding-bottom: 30px; }
 .search-clear:hover { background: var(--shell); color: var(--ink); }
 
 .shop-controls {
-  position: sticky; top: calc(var(--ribbon-h) + var(--island-h) + 28px); z-index: 30;
+  position: relative; z-index: 1;
   display: flex; gap: 12px; align-items: center; justify-content: space-between;
   margin-bottom: 28px; padding: 14px 0 18px;
   background: var(--ground);
   border-bottom: 1px solid var(--hair);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+@media (max-width: 767px) {
+  .shop-controls {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 0 14px;
+  }
+  .sort { align-self: flex-end; }
 }
 .filters { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; padding: 4px; margin: -4px; flex: 1; min-width: 0; }
 .filters::-webkit-scrollbar { display: none; }
@@ -470,6 +490,7 @@ main { padding-bottom: 30px; }
 .product-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; } }
 @media (min-width: 1100px) { .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; } }
+@media (max-width: 479px) { .product-grid { grid-template-columns: 1fr; } }
 
 .product { animation: rise 0.8s var(--spring) both; animation-delay: calc(var(--i, 0) * 50ms); }
 .product .bezel:hover { transform: translateY(-4px); box-shadow: var(--shadow-soft); border-color: var(--hair-strong); }
@@ -660,12 +681,20 @@ input:focus, textarea:focus { outline: 0; border-color: var(--saffron); box-shad
 
 .overlay { position: fixed; inset: 0; z-index: 50; background: rgba(26, 10, 14, 0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: fade 0.4s var(--spring); }
 .drawer {
-  position: fixed; top: 12px; right: 12px; bottom: 12px; z-index: 60;
+  position: fixed; top: calc(var(--ribbon-h) + var(--island-h) + 24px); right: 12px; bottom: 12px; z-index: 60;
   width: min(440px, calc(100% - 24px)); background: var(--paper);
   border-radius: var(--r-xl); border: 1px solid var(--hair);
   display: flex; flex-direction: column; overflow: hidden;
   transform: translateX(calc(100% + 24px)); transition: transform 0.7s var(--spring);
   box-shadow: var(--shadow-float);
+}
+@media (max-width: 599px) {
+  .drawer {
+    top: calc(var(--ribbon-h) + var(--island-h) + 16px);
+    right: 8px;
+    bottom: 8px;
+    width: calc(100% - 16px);
+  }
 }
 .drawer.is-open { transform: none; }
 .drawer.is-animating { will-change: transform; }
