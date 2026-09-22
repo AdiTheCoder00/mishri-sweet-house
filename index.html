@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mishri Sweet House</title>
+  <meta name="description" content="Fresh mithai made every morning in Jaipur. Kaju Katli, Gulab Jamun, Rasmalai and gift boxes, delivered across India." />
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<!--
+  impeccable direction contract (seed c91e796c)
+  THESIS: Jaipur's own screen grammar sells the sweets. Refuses the premium-DTC hero (one photo, three feature cards, product grid) in favour of the counter seen through a jaali.
+  OWN-WORLD: cool white ground; Jaipur pink and pista green as page-scale fields carrying a jaali lattice; saffron pill CTAs with a nested trailing icon; cusped-arch photo windows; double-bezel tiles (hairline shell, paper core, concentric radii); Clash Display + Satoshi; spring easing 0.32,0.72,0,1; dated small-caps batch stamps. The jaali is a field material only: it never covers a sweet.
+  STORY: a gift-giver in another city sees this morning's counter, believes it was made today and will arrive fresh, picks a box, writes a card, pays knowing what happens next.
+  FIRST VIEWPORT: editorial split. Left: headline at 5.5rem over two lines, one sub, primary "Shop the counter" pill. Right: a pink lattice panel with a horizontally scrolling row of arch-framed sweets, each stamped with its batch time; the island nav floats above. Primary action sits under the headline.
+  FORM: candidate 6 of 7 (jaali and block-print Jaipur), assigned by the roll; raised by the hand it beat: colour holds a third of the screen, lattice cells stay square, dated stamps, charged emptiness.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+-->
+
+  <!-- Seasonal ribbon -->
+  <div class="ribbon">
+    <button class="ribbon-arrow" id="ribbon-prev" aria-label="Previous notice"><i class="ph-light ph-caret-left" aria-hidden="true"></i></button>
+    <p class="ribbon-text" id="ribbon-text" aria-live="polite"></p>
+    <button class="ribbon-arrow" id="ribbon-next" aria-label="Next notice"><i class="ph-light ph-caret-right" aria-hidden="true"></i></button>
+  </div>
+
+  <!-- Floating island nav -->
+  <header class="island" id="top">
+    <a href="#top" class="brand" aria-label="Mishri Sweet House home">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2l2.6 5.4L20 8.2l-4 3.9.9 5.6L12 15l-4.9 2.7.9-5.6-4-3.9 5.4-.8z" fill="currentColor"/></svg></span>
+      <span class="brand-name">Mishri</span>
+    </a>
+    <nav class="island-links" aria-label="Primary">
+      <a href="#shop">Counter</a>
+      <a href="#gifts">Gift boxes</a>
+      <a href="#story">Kitchen</a>
+      <a href="#reviews">Reviews</a>
+    </nav>
+    <div class="island-actions">
+      <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode"><i class="ph-light ph-moon" aria-hidden="true"></i></button>
+      <button class="icon-btn" id="wishlist-open" aria-label="Open wishlist">
+        <i class="ph-light ph-heart" aria-hidden="true"></i>
+        <span class="count" id="wishlist-count" hidden>0</span>
+      </button>
+      <button class="icon-btn" id="cart-open" aria-label="Open basket">
+        <i class="ph-light ph-basket" aria-hidden="true"></i>
+        <span class="count count-accent" id="cart-count" hidden>0</span>
+      </button>
+      <button class="icon-btn burger" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="burger-line burger-top" aria-hidden="true"></span>
+        <span class="burger-line burger-bottom" aria-hidden="true"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Full-screen menu -->
+  <div class="menu" id="mobile-menu" hidden>
+    <nav class="menu-links" aria-label="Menu">
+      <a href="#shop" style="--i:0">The counter</a>
+      <a href="#gifts" style="--i:1">Gift boxes</a>
+      <a href="#story" style="--i:2">Our kitchen</a>
+      <a href="#reviews" style="--i:3">Reviews</a>
+    </nav>
+    <p class="menu-foot" style="--i:4">14 Johari Bazaar Road, Jaipur. Since 1962.</p>
+  </div>
+
+  <main>
+
+    <!-- Hero: editorial split, the counter through a jaali -->
+    <section class="hero">
+      <div class="hero-panel" aria-hidden="true"></div>
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <h1>Mithai made this morning, at your door by evening.</h1>
+          <p>Kaju Katli, Gulab Jamun and twelve more classics, cooked fresh daily in our Jaipur kitchen.</p>
+          <div class="hero-ctas">
+            <a href="#shop" class="btn btn-primary">Shop the counter <span class="btn-ico"><i class="ph-light ph-arrow-down-right" aria-hidden="true"></i></span></a>
+            <a href="#gifts" class="btn btn-ghost">See gift boxes</a>
+          </div>
+        </div>
+        <div class="counter-strip" id="hero-strip" aria-label="This morning's counter"></div>
+      </div>
+      <p class="hero-note wrap"><span class="stamp">Today's counter</span> Times are this morning's batch clock. Tap a sweet to see it up close.</p>
+    </section>
+
+    <!-- Promise: three stamps on a ruled lattice -->
+    <section class="promise">
+      <div class="wrap promise-grid">
+        <div class="promise-item reveal" style="--i:0">
+          <span class="stamp">05:00</span>
+          <strong>Made at 5 am</strong>
+          <span>Nothing on the shelf is older than a day.</span>
+        </div>
+        <div class="promise-item reveal" style="--i:1">
+          <span class="stamp">By evening</span>
+          <strong>Same-day in Jaipur</strong>
+          <span>Next-day to 40 cities, packed cold where needed.</span>
+        </div>
+        <div class="promise-item reveal" style="--i:2">
+          <span class="stamp">Desi ghee</span>
+          <strong>Pure ghee, no colour</strong>
+          <span>Desi ghee, whole milk, no artificial dyes.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- The counter -->
+    <section class="shop" id="shop">
+      <div class="wrap">
+        <div class="shop-head">
+          <h2>The counter</h2>
+          <form class="search" id="search-form" role="search" onsubmit="return false">
+            <i class="ph-light ph-magnifying-glass" aria-hidden="true"></i>
+            <label for="search" class="sr-only">Search sweets</label>
+            <input type="search" id="search" placeholder="Search sweets" autocomplete="off" enterkeyhint="search" />
+            <button type="button" class="search-clear" id="search-clear" aria-label="Clear search" hidden><i class="ph-light ph-x" aria-hidden="true"></i></button>
+          </form>
+        </div>
+        <div class="shop-controls">
+          <div class="filters" id="filters" role="group" aria-label="Filter by category">
+            <button class="chip is-active" data-cat="All">All</button>
+            <button class="chip" data-cat="Barfi">Barfi</button>
+            <button class="chip" data-cat="Ladoo">Ladoo</button>
+            <button class="chip" data-cat="Bengali">Bengali</button>
+            <button class="chip" data-cat="Syrup">Syrup</button>
+            <button class="chip" data-cat="Ghee">Ghee</button>
+          </div>
+          <label class="sort">
+            <span class="sr-only">Sort products</span>
+            <select id="sort">
+              <option value="featured">Featured</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
+              <option value="name">Name</option>
+            </select>
+          </label>
+        </div>
+        <p class="cat-hint" id="cat-hint" aria-live="polite"></p>
+        <div class="product-grid" id="product-grid" aria-live="polite"></div>
+        <div class="shop-empty" id="shop-empty" hidden>
+          <p id="shop-empty-text"></p>
+          <div class="shop-empty-actions">
+            <button class="btn btn-ghost" id="empty-clear-search" hidden>Clear search</button>
+            <button class="btn btn-ghost" id="empty-clear-filter" hidden>Show all categories</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Gift boxes -->
+    <section class="gifts" id="gifts">
+      <div class="wrap">
+        <div class="section-head">
+          <h2>Gift boxes</h2>
+          <p class="lede">Curated boxes for festivals, offices and weddings. Add a handwritten card at checkout.</p>
+        </div>
+        <div class="bento" id="bento"></div>
+      </div>
+    </section>
+
+    <!-- Kitchen story on a pista field -->
+    <section class="story" id="story">
+      <div class="wrap story-grid">
+        <figure class="story-media reveal">
+          <img src="images/story.jpg" alt="The halwai at the Mishri counter with the morning's trays" width="900" height="675" loading="lazy" />
+        </figure>
+        <div class="story-copy">
+          <h2>Three generations, one kadhai.</h2>
+          <p>Our grandfather opened a two-table shop near Johari Bazaar in 1962. The recipes have not changed. The ghee still comes from the same dairy, the khoya is still reduced by hand, and the sugar is still weighed on a balance scale.</p>
+          <ol class="steps">
+            <li class="reveal" style="--i:0">
+              <span class="stamp">04:00</span>
+              <div><strong>Milk arrives at 4 am</strong><span>Fresh from a Sanganer dairy, reduced to khoya over a slow flame.</span></div>
+            </li>
+            <li class="reveal" style="--i:1">
+              <span class="stamp">5 kg lots</span>
+              <div><strong>Cooked in small batches</strong><span>Every barfi and ladoo is made in five kilo lots so nothing sits.</span></div>
+            </li>
+            <li class="reveal" style="--i:2">
+              <span class="stamp">12:00</span>
+              <div><strong>Packed by noon</strong><span>Boxed, weighed and out for delivery before the afternoon heat.</span></div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reviews on a ruled lattice -->
+    <section class="reviews" id="reviews">
+      <div class="wrap">
+        <h2>What people say</h2>
+        <div class="review-grid">
+          <blockquote class="review review-lead reveal" style="--i:0">
+            <p>"Ordered the Diwali box for my parents in Pune. It reached the next morning and the Kaju Katli was still soft."</p>
+            <footer><div class="review-rating" role="img" aria-label="5 out of 5"><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i></div><strong>Priyanka Rathore</strong><span>Bengaluru</span><div class="review-meta"><span>14 November 2025</span><span class="review-verified"><i class="ph-light ph-seal-check" aria-hidden="true"></i>Verified order</span></div></footer>
+          </blockquote>
+          <blockquote class="review reveal" style="--i:1">
+            <p>"The Mysore Pak tastes exactly like the one from my grandmother's kitchen. I have been looking for this for years."</p>
+            <footer><div class="review-rating" role="img" aria-label="5 out of 5"><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i></div><strong>Karthik Venkatesan</strong><span>Chennai</span><div class="review-meta"><span>2 September 2025</span><span class="review-verified"><i class="ph-light ph-seal-check" aria-hidden="true"></i>Verified order</span></div></footer>
+          </blockquote>
+          <blockquote class="review reveal" style="--i:2">
+            <p>"We send the Office Box to clients every quarter. Zero complaints, and someone always asks where it came from."</p>
+            <footer><div class="review-rating" role="img" aria-label="4 out of 5"><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-light ph-star" aria-hidden="true"></i></div><strong>Nafisa Sheikh</strong><span>Jaipur</span><div class="review-meta"><span>28 August 2025</span><span class="review-verified"><i class="ph-light ph-seal-check" aria-hidden="true"></i>Verified order</span></div></footer>
+          </blockquote>
+          <blockquote class="review reveal" style="--i:3">
+            <p>"Rasmalai arrived cold with ice packs. Not too sweet, which is rare. Ordering again for Holi."</p>
+            <footer><div class="review-rating" role="img" aria-label="5 out of 5"><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i><i class="ph-fill ph-star" aria-hidden="true"></i></div><strong>Devansh Mehta</strong><span>Ahmedabad</span><div class="review-meta"><span>19 March 2025</span><span class="review-verified"><i class="ph-light ph-seal-check" aria-hidden="true"></i>Verified order</span></div></footer>
+          </blockquote>
+        </div>
+        <p class="review-note">Sample reviews for this demo store.</p>
+      </div>
+    </section>
+
+    <!-- Newsletter on a pink field -->
+    <section class="newsletter">
+      <div class="wrap newsletter-inner">
+        <div class="newsletter-copy">
+          <h2>Festival boxes sell out early.</h2>
+          <p>Get a note when Diwali, Holi and Rakhi boxes open for pre-order.</p>
+        </div>
+        <form class="newsletter-form" id="newsletter-form" novalidate>
+          <label for="nl-email">Email address</label>
+          <div class="newsletter-row">
+            <input type="email" id="nl-email" name="email" autocomplete="email" required />
+            <button type="submit" class="btn btn-primary">Notify me <span class="btn-ico"><i class="ph-light ph-arrow-right" aria-hidden="true"></i></span></button>
+          </div>
+          <p class="field-error" id="nl-error" hidden>Please enter a valid email address.</p>
+          <p class="field-success" id="nl-success" hidden>You are on the list.</p>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <h2 class="sr-only">Mishri Sweet House</h2>
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2l2.6 5.4L20 8.2l-4 3.9.9 5.6L12 15l-4.9 2.7.9-5.6-4-3.9 5.4-.8z" fill="currentColor"/></svg></span>
+        <p>Mishri Sweet House<br />14 Johari Bazaar Road, Jaipur 302003</p>
+      </div>
+      <div class="footer-col">
+        <h3>Shop</h3>
+        <a href="#shop">All sweets</a>
+        <a href="#gifts">Gift boxes</a>
+        <a href="#gifts">Bulk orders</a>
+      </div>
+      <div class="footer-col">
+        <h3>Help</h3>
+        <a href="#" onclick="return false">Delivery areas</a>
+        <a href="#" onclick="return false">Storage guide</a>
+        <a href="#" onclick="return false">Contact us</a>
+      </div>
+      <div class="footer-col">
+        <h3>Follow</h3>
+        <a href="#" onclick="return false">Instagram</a>
+        <a href="#" onclick="return false">WhatsApp</a>
+      </div>
+    </div>
+    <div class="wrap footer-bottom">
+      <span>Demo store. No real orders are placed.</span>
+      <span>Since 1962</span>
+    </div>
+  </footer>
+
+  <!-- Basket drawer -->
+  <div class="overlay" id="cart-overlay" hidden></div>
+  <aside class="drawer" id="cart-drawer" aria-label="Shopping basket" inert>
+    <div class="drawer-head">
+      <h2>Your basket</h2>
+      <button class="icon-btn" id="cart-close" aria-label="Close basket"><i class="ph-light ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="drawer-body" id="cart-items"></div>
+    <div class="drawer-empty" id="cart-empty">
+      <i class="ph-light ph-basket" aria-hidden="true"></i>
+      <p>Your basket is empty.</p>
+      <button class="btn btn-ghost" id="cart-empty-cta">Browse the counter</button>
+    </div>
+    <div class="drawer-foot" id="cart-foot">
+      <p class="drawer-nudge" id="cart-nudge" hidden></p>
+      <div class="drawer-row"><span>Subtotal</span><strong id="cart-subtotal">₹0</strong></div>
+      <div class="drawer-row muted"><span>Delivery</span><span id="cart-delivery">Free over ₹999</span></div>
+      <button class="btn btn-primary btn-block" id="checkout-open">Checkout <span class="btn-ico"><i class="ph-light ph-arrow-right" aria-hidden="true"></i></span></button>
+    </div>
+  </aside>
+
+  <!-- Wishlist drawer -->
+  <aside class="drawer" id="wishlist-drawer" aria-label="Wishlist" inert>
+    <div class="drawer-head">
+      <h2>Saved for later</h2>
+      <button class="icon-btn" id="wishlist-close" aria-label="Close wishlist"><i class="ph-light ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="drawer-body" id="wishlist-items"></div>
+    <div class="drawer-empty" id="wishlist-empty">
+      <i class="ph-light ph-heart" aria-hidden="true"></i>
+      <p>Nothing saved yet. Tap the heart on any sweet to keep it here.</p>
+      <button class="btn btn-ghost" id="wishlist-empty-cta">Browse the counter</button>
+    </div>
+    <div class="drawer-foot" id="wishlist-foot">
+      <button class="btn btn-primary btn-block" id="wishlist-add-all">Move all to basket <span class="btn-ico"><i class="ph-light ph-arrow-right" aria-hidden="true"></i></span></button>
+    </div>
+  </aside>
+
+  <!-- Product quick view -->
+  <dialog class="modal" id="product-modal">
+    <button class="icon-btn modal-close" data-close aria-label="Close"><i class="ph-light ph-x" aria-hidden="true"></i></button>
+    <div class="modal-grid" id="product-modal-body"></div>
+  </dialog>
+
+  <!-- Checkout -->
+  <dialog class="modal modal-checkout" id="checkout-modal">
+    <button class="icon-btn modal-close" data-close aria-label="Close"><i class="ph-light ph-x" aria-hidden="true"></i></button>
+    <form id="checkout-form" novalidate>
+      <h2>Delivery details</h2>
+      <div class="field">
+        <label for="co-name">Full name</label>
+        <input id="co-name" name="name" type="text" autocomplete="name" required />
+        <p class="field-error" hidden>Please enter your name.</p>
+      </div>
+      <div class="field">
+        <label for="co-phone">Mobile number</label>
+        <input id="co-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98765 43210" required />
+        <p class="field-help">We call this number if the delivery rider cannot find you.</p>
+        <p class="field-error" hidden>Enter a 10 digit Indian mobile number. Spaces, hyphens and +91 are fine.</p>
+      </div>
+      <div class="field">
+        <label for="co-address">Address</label>
+        <textarea id="co-address" name="address" rows="3" autocomplete="street-address" required></textarea>
+        <p class="field-error" hidden>Please enter a delivery address.</p>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="co-city">City</label>
+          <input id="co-city" name="city" type="text" autocomplete="address-level2" required />
+          <p class="field-error" hidden>Enter your city.</p>
+        </div>
+        <div class="field">
+          <label for="co-pin">PIN code</label>
+          <input id="co-pin" name="pin" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="6" required />
+          <p class="field-error" hidden>Enter a 6 digit PIN code.</p>
+        </div>
+      </div>
+      <p class="delivery-note" id="delivery-note" hidden></p>
+      <div class="field">
+        <label for="co-note">Handwritten card message <span class="optional">(optional)</span></label>
+        <input id="co-note" name="note" type="text" maxlength="120" placeholder="Happy Diwali, Ma. Eat the Kaju Katli first." />
+        <p class="field-help">We write it by hand on a card tucked inside the box.</p>
+      </div>
+
+      <fieldset class="pay">
+        <legend>How would you like to pay?</legend>
+        <label class="pay-option">
+          <input type="radio" name="pay" value="upi" checked />
+          <span class="pay-body">
+            <span class="pay-title"><i class="ph-light ph-qr-code" aria-hidden="true"></i>UPI</span>
+            <span class="pay-desc">Pay now from any UPI app. Instant confirmation.</span>
+          </span>
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="pay" value="card" />
+          <span class="pay-body">
+            <span class="pay-title"><i class="ph-light ph-credit-card" aria-hidden="true"></i>Debit or credit card</span>
+            <span class="pay-desc">You pay on a secure page after placing the order.</span>
+          </span>
+        </label>
+        <label class="pay-option">
+          <input type="radio" name="pay" value="cod" />
+          <span class="pay-body">
+            <span class="pay-title"><i class="ph-light ph-hand-coins" aria-hidden="true"></i>Pay on delivery</span>
+            <span class="pay-desc">Cash or UPI at the door when the box arrives.</span>
+          </span>
+        </label>
+      </fieldset>
+
+      <div class="pay-detail" data-pay="upi">
+        <div class="field">
+          <label for="co-upi">UPI ID</label>
+          <input id="co-upi" name="upi" type="text" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="name@okhdfcbank" />
+          <p class="field-help">You will get a payment request in your UPI app for the total below.</p>
+          <p class="field-error" hidden>Enter a UPI ID like name@okhdfcbank or 9876543210@ybl.</p>
+        </div>
+      </div>
+      <div class="pay-detail" data-pay="card" hidden>
+        <p class="pay-note"><i class="ph-light ph-lock-key" aria-hidden="true"></i>Card details are entered on the bank's secure page, never on this site.</p>
+      </div>
+      <div class="pay-detail" data-pay="cod" hidden>
+        <p class="pay-note" id="cod-note"><i class="ph-light ph-hand-coins" aria-hidden="true"></i>Keep the amount ready for the rider. UPI at the door works too.</p>
+      </div>
+
+      <div class="summary" id="checkout-summary"></div>
+
+      <ul class="assure" id="assure" aria-label="What to expect"></ul>
+
+      <div class="checkout-foot">
+        <button type="submit" class="btn btn-primary btn-block" id="place-order" aria-live="polite">Place order</button>
+        <p class="checkout-fine">Demo store. No money moves and nothing is sent.</p>
+      </div>
+    </form>
+    <div class="order-success" id="order-success" hidden>
+      <i class="ph-fill ph-check-circle" aria-hidden="true"></i>
+      <h2 id="order-success-title">Order placed</h2>
+      <p id="order-success-text"></p>
+      <div class="receipt" id="order-receipt"></div>
+      <button class="btn btn-primary" data-close>Back to shop</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toast-text"></span>
+    <button class="toast-action" id="toast-action" hidden></button>
+  </div>
+
+  <script src="products.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
