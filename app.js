@@ -31,29 +31,6 @@
     try { localStorage.setItem("mishri-theme", next); } catch {}
   });
 
-  /* ---------------- Island retract ---------------- */
-
-  const island = $(".island");
-  let lastY = window.scrollY;
-  let tickQueued = false;
-
-  function updateIsland() {
-    tickQueued = false;
-    const y = window.scrollY;
-    const past = y > 260;                 // never tuck it away over the hero
-    const down = y > lastY + 6;
-    const up = y < lastY - 6;
-    if (past && down) island.classList.add("is-tucked");
-    else if (up || !past) island.classList.remove("is-tucked");
-    if (down || up) lastY = y;
-  }
-  const untuck = () => island.classList.remove("is-tucked");
-  addEventListener("scroll", () => {
-    if (tickQueued) return;
-    tickQueued = true;
-    requestAnimationFrame(updateIsland);
-  }, { passive: true });
-
   /* ---------------- Mobile menu ---------------- */
 
   const menuBtn = $("#menu-toggle");

@@ -141,6 +141,7 @@ body {
   background: var(--ground);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  padding-bottom: 90px;
 }
 img { display: block; max-width: 100%; height: auto; }
 [hidden] { display: none !important; }
@@ -148,6 +149,45 @@ img { display: block; max-width: 100%; height: auto; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--hair-strong); border-radius: 999px; border: 3px solid var(--ground); }
 ::-webkit-scrollbar-track { background: transparent; }
+
+.whatsapp-float {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 80;
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #2ae06b 0%, #1bbf5d 100%);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 20px 34px -18px rgba(19, 172, 85, 0.9), 0 10px 22px rgba(26, 26, 34, 0.18);
+  transition: transform 0.25s var(--spring), box-shadow 0.25s var(--spring), filter 0.25s var(--spring);
+  position: fixed;
+}
+.whatsapp-float:hover,
+.whatsapp-float:focus-visible {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 26px 38px -18px rgba(19, 172, 85, 0.95), 0 12px 24px rgba(26, 26, 34, 0.2);
+  filter: saturate(1.08);
+}
+.whatsapp-float:active {
+  transform: translateY(0) scale(0.98);
+}
+.whatsapp-float i {
+  font-size: 29px;
+  line-height: 1;
+}
+@media (max-width: 480px) {
+  .whatsapp-float {
+    right: 14px;
+    bottom: 14px;
+    width: 54px;
+    height: 54px;
+  }
+}
 
 h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: 600; letter-spacing: -0.02em; line-height: 1.02; text-wrap: balance; }
 h1 { font-size: clamp(2.6rem, 6.2vw, 5.5rem); letter-spacing: -0.035em; line-height: 0.98; }
@@ -164,6 +204,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
 section { padding: 72px 0; }
+main { padding-bottom: 30px; }
 @media (min-width: 600px) { section { padding: 96px 0; } }
 @media (min-width: 900px) { section { padding: 144px 0; } }
 .section-head { max-width: 62ch; margin-bottom: 56px; }
@@ -251,25 +292,18 @@ section { padding: 72px 0; }
 /* Island nav ---------------------------------------------------------- */
 
 .island {
-  position: fixed; top: calc(var(--ribbon-h) + 12px); left: 50%; z-index: 40;
+  position: fixed; top: calc(var(--ribbon-h) + 12px); left: 50%; z-index: 90;
   transform: translateX(-50%);
   display: flex; align-items: center; gap: 8px;
   height: var(--island-h); padding: 0 8px 0 10px;
   width: max-content; max-width: calc(100% - 24px);
   border-radius: 999px;
-  background: var(--glass);
+  background: var(--paper);
   border: 1px solid var(--glass-edge);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), var(--shadow-float);
   backdrop-filter: blur(22px) saturate(160%);
   -webkit-backdrop-filter: blur(22px) saturate(160%);
-  animation: island-in 0.9s var(--spring) 0.1s both;
-  transition: transform 0.5s var(--spring), opacity 0.4s var(--spring);
 }
-.island.is-tucked {
-  transform: translate(-50%, calc(-100% - var(--ribbon-h) - 24px));
-  opacity: 0; pointer-events: none;
-}
-@keyframes island-in { from { opacity: 0; transform: translate(-50%, -16px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @media (min-width: 900px) { .island { top: calc(var(--ribbon-h) + 16px); gap: 20px; padding: 0 8px 0 14px; } }
 .brand { display: flex; align-items: center; gap: 10px; min-height: 44px; font-family: var(--font-display); font-weight: 600; font-size: 1.15rem; letter-spacing: -0.01em; }
 .brand-mark { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 999px; background: var(--pink); color: var(--on-pink); }
@@ -404,10 +438,11 @@ section { padding: 72px 0; }
 .search-clear:hover { background: var(--shell); color: var(--ink); }
 
 .shop-controls {
-  position: sticky; top: calc(var(--ribbon-h) + var(--island-h) + 24px); z-index: 20;
+  position: sticky; top: calc(var(--ribbon-h) + var(--island-h) + 28px); z-index: 30;
   display: flex; gap: 12px; align-items: center; justify-content: space-between;
   margin-bottom: 28px; padding: 14px 0 18px;
-  background: color-mix(in srgb, var(--ground) 94%, transparent);
+  background: var(--ground);
+  border-bottom: 1px solid var(--hair);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
 }
 .filters { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; padding: 4px; margin: -4px; flex: 1; min-width: 0; }
