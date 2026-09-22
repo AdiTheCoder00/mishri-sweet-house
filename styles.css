@@ -561,7 +561,7 @@ section { padding: 72px 0; }
 .review-lead p { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.5rem, 2.4vw, 2.1rem); letter-spacing: -0.02em; line-height: 1.2; max-width: 30ch; }
 .review footer { display: flex; flex-direction: column; gap: 2px; font-size: 0.9rem; }
 .review footer span { color: var(--ink-2); }
-.review-rating { display: flex; gap: 2px; color: var(--saffron); font-size: 15px; margin-bottom: -8px; }
+.review-rating { display: flex; gap: 2px; color: var(--saffron); font-size: 15px; margin-bottom: 4px; }
 .review-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.8rem; color: var(--ink-2); }
 .review-verified { display: inline-flex; align-items: center; gap: 4px; color: var(--pista-ink); }
 .review-verified i { font-size: 14px; }
