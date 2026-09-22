@@ -253,7 +253,7 @@
       const atMin = line.qty <= minQty(p.id);
       return `
         <div class="cart-item" data-id="${p.id}">
-          <img src="${p.img}" alt="" width="72" height="72" loading="lazy" />
+          <img src="${p.img}" alt="" width="72" height="72" loading="lazy" decoding="async" />
           <div>
             <div class="cart-item-name">${escapeHtml(p.name)}</div>
             <div class="cart-item-meta">${escapeHtml(p.weight)} · ${inr(p.price)} each</div>
@@ -436,7 +436,7 @@
         <div class="bezel">
           <div class="bezel-core">
             <div class="product-media">
-              <img src="${p.img}" alt="${escapeHtml(p.name)}" width="800" height="800" loading="lazy" />
+              <img src="${p.img}" alt="${escapeHtml(p.name)}" width="800" height="800" loading="lazy" decoding="async" />
               ${p.tag ? `<span class="product-tag">${escapeHtml(p.tag)}</span>` : ""}
               ${wishButton(p.id, p.name)}
             </div>
@@ -546,7 +546,7 @@
       <div class="bento-cell" data-id="${b.id}">
         <div class="bezel">
           <div class="bezel-core">
-            <img src="${b.img}" alt="${escapeHtml(b.name)}" loading="lazy" />
+            <img src="${b.img}" alt="${escapeHtml(b.name)}" width="800" height="800" loading="lazy" decoding="async" />
           </div>
         </div>
         ${wishButton(b.id, b.name)}
@@ -594,7 +594,7 @@
     $("#product-modal-body").dataset.id = p.id;
     const serves = typeof SERVES !== "undefined" ? SERVES[p.weight] : "";
     $("#product-modal-body").innerHTML = `
-      <img src="${p.img}" alt="${escapeHtml(p.name)}" width="800" height="800" />
+      <img src="${p.img}" alt="${escapeHtml(p.name)}" width="800" height="800" decoding="async" />
       <div class="modal-copy">
         <h2>${escapeHtml(p.name)}</h2>
         <p class="desc">${escapeHtml(p.desc)}</p>
@@ -835,7 +835,7 @@
     $("#hero-strip").innerHTML = picks.map((p, i) => `
       <button class="tile-arch" data-id="${p.id}" aria-label="View ${escapeHtml(p.name)}">
         <div class="arch">
-          <img src="${p.img}" alt="" width="400" height="560" ${i < 3 ? 'fetchpriority="high"' : 'loading="lazy"'} />
+          <img src="${p.img}" alt="" width="400" height="560" decoding="async" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} />
         </div>
         <span class="tile-cap"><span class="stamp">${BATCH_TIMES[i]}</span>${escapeHtml(p.name)}</span>
       </button>`).join("");

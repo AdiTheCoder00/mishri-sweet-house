@@ -9,7 +9,7 @@ const PRODUCTS = [
     weight: "500 g",
     tag: "Bestseller",
     desc: "Thin diamonds of cashew and sugar, finished with edible silver leaf. Melts before you finish the bite.",
-    img: "images/kaju-katli.jpg",
+    img: "images/kaju-katli.webp",
   },
   {
     id: "gulab-jamun",
@@ -19,7 +19,7 @@ const PRODUCTS = [
     weight: "12 pieces",
     tag: "",
     desc: "Khoya dumplings fried slow and soaked in rose and cardamom syrup. Served warm at the counter.",
-    img: "images/gulab-jamun.jpg",
+    img: "images/gulab-jamun.webp",
   },
   {
     id: "rasmalai",
@@ -29,7 +29,7 @@ const PRODUCTS = [
     weight: "8 pieces",
     tag: "Chilled",
     desc: "Soft chenna discs resting in saffron milk, topped with pistachio. Keep cold, eat within two days.",
-    img: "images/rasmalai.jpg",
+    img: "images/rasmalai.webp",
   },
   {
     id: "motichoor-ladoo",
@@ -39,7 +39,7 @@ const PRODUCTS = [
     weight: "500 g",
     tag: "",
     desc: "Tiny boondi pearls bound with ghee and sugar. The one that shows up at every celebration.",
-    img: "images/motichoor-ladoo.jpg",
+    img: "images/motichoor-ladoo.webp",
   },
   {
     id: "pista-barfi",
@@ -49,7 +49,7 @@ const PRODUCTS = [
     weight: "500 g",
     tag: "Premium",
     desc: "Ground Iranian pistachio and milk solids pressed into a dense green slab. No colour added.",
-    img: "images/pista-barfi.jpg",
+    img: "images/pista-barfi.webp",
   },
   {
     id: "mysore-pak",
@@ -59,7 +59,7 @@ const PRODUCTS = [
     weight: "500 g",
     tag: "",
     desc: "Besan, sugar and a generous amount of ghee, cooked until it crumbles on the tongue.",
-    img: "images/mysore-pak.jpg",
+    img: "images/mysore-pak.webp",
   },
   {
     id: "jalebi",
@@ -69,7 +69,7 @@ const PRODUCTS = [
     weight: "400 g",
     tag: "Made to order",
     desc: "Crisp fermented batter spirals dipped in warm saffron syrup. Best eaten the same day.",
-    img: "images/jalebi.jpg",
+    img: "images/jalebi.webp",
   },
   {
     id: "rasgulla",
@@ -79,7 +79,7 @@ const PRODUCTS = [
     weight: "12 pieces",
     tag: "",
     desc: "Spongy chenna balls in light sugar syrup. Cold, clean and not too sweet.",
-    img: "images/rasgulla.jpg",
+    img: "images/rasgulla.webp",
   },
   {
     id: "besan-ladoo",
@@ -89,7 +89,7 @@ const PRODUCTS = [
     weight: "500 g",
     tag: "",
     desc: "Roasted gram flour, ghee and cardamom rolled by hand. Nutty, grainy, comforting.",
-    img: "images/besan-ladoo.jpg",
+    img: "images/besan-ladoo.webp",
   },
   {
     id: "kalakand",
@@ -99,7 +99,7 @@ const PRODUCTS = [
     weight: "500 g",
     tag: "",
     desc: "Soft, grainy squares of curdled milk and sugar, set overnight and cut by hand.",
-    img: "images/kalakand.jpg",
+    img: "images/kalakand.webp",
   },
   {
     id: "moong-dal-halwa",
@@ -109,7 +109,7 @@ const PRODUCTS = [
     weight: "500 g",
     tag: "Winter special",
     desc: "Moong dal roasted slowly in ghee until it turns golden, then finished with saffron and almonds.",
-    img: "images/moong-dal-halwa.jpg",
+    img: "images/moong-dal-halwa.webp",
   },
   {
     id: "kesar-peda",
@@ -119,7 +119,7 @@ const PRODUCTS = [
     weight: "500 g",
     tag: "",
     desc: "Slow-cooked khoya pressed into saffron discs, each one stamped by hand.",
-    img: "images/kesar-peda.jpg",
+    img: "images/kesar-peda.webp",
   },
 ];
 
@@ -133,7 +133,7 @@ const GIFT_BOXES = [
     price: 1899,
     weight: "1.2 kg, 6 varieties",
     desc: "Kaju Katli, Pista Barfi, Motichoor Ladoo, Kesar Peda, Besan Ladoo and Kalakand in a wooden box.",
-    img: "images/box-diwali.jpg",
+    img: "images/box-diwali.webp",
   },
   {
     id: "box-office",
@@ -141,7 +141,7 @@ const GIFT_BOXES = [
     price: 1299,
     weight: "800 g, 4 varieties",
     desc: "Dry sweets only, so nothing melts on the desk. Feeds a team of ten.",
-    img: "images/box-office.jpg",
+    img: "images/box-office.webp",
   },
   {
     id: "box-wedding",
@@ -151,6 +151,6 @@ const GIFT_BOXES = [
     minQty: 50,
     step: 10,
     desc: "Two Kaju Katli and two Kesar Peda in a small ribboned box. Minimum order of 50.",
-    img: "images/box-wedding.jpg",
+    img: "images/box-wedding.webp",
   },
 ];
