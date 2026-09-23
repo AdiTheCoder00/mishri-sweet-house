@@ -39,6 +39,37 @@ Cart, wishlist and theme persist in `localStorage`. Nothing is charged and no or
 | `serve.js` | Dependency-free static server for local preview |
 | `DESIGN.md` / `PRODUCT.md` | Visual system and product truth |
 
+## Building the product pages
+
+```bash
+node build.js
+```
+
+Generates one indexable page per sweet, per gift box and per category, then rewrites `sitemap.xml`:
+
+| Output | Count | Example |
+| --- | --- | --- |
+| `sweets/<slug>/` | 12 | `sweets/kaju-katli/` |
+| `gifts/<slug>/` | 3 | `gifts/the-diwali-box/` |
+| `mithai/<category>/` | 5 | `mithai/barfi/` |
+
+Each page carries its own title, meta description (clipped to 158 chars), canonical, Open Graph and Twitter tags, plus `Product` and `BreadcrumbList` structured data. Category pages carry `ItemList`.
+
+The generator reads `products.js` for the catalogue and lifts the ribbon, nav and footer straight out of `index.html`, so the generated pages cannot drift from the real header or the real prices. **Re-run it after editing `products.js` or the site chrome.**
+
+`sweets/`, `gifts/` and `mithai/` are disposable build output. Delete and regenerate freely.
+
+### Adding real copy per product
+
+Thin pages do not rank. Each generated page currently carries the one-line `desc` from `products.js` plus shared facts (storage by category, delivery, ingredients). To add depth, give any product a `story` field in `products.js` and it will render below the description:
+
+```js
+{ id: "kaju-katli", name: "Kaju Katli", /* … */
+  story: "150–300 words on where the cashews come from, how thin it is rolled, why the vark matters…" }
+```
+
+Aim for 150–300 unique words per product. That is the single biggest remaining SEO lever.
+
 ## SEO
 
 The page ships a full head (title, description, canonical, Open Graph, Twitter card, theme-color, SVG favicon), `robots.txt`, `sitemap.xml`, and JSON-LD structured data describing the shop (`Store`), the site (`WebSite`) and all 15 products with prices in INR.
