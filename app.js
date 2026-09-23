@@ -512,10 +512,25 @@
     Ghee: "Slow-cooked in desi ghee. Rich, and they keep well.",
   };
 
+  function updateFilterFade() {
+    const wrap = $("#filters-wrap"), row = $("#filters");
+    if (!wrap || !row) return;
+    wrap.classList.toggle("has-more", row.scrollWidth - row.clientWidth - row.scrollLeft > 4);
+  }
+  $("#filters").addEventListener("scroll", updateFilterFade, { passive: true });
+  addEventListener("resize", updateFilterFade, { passive: true });
+
   function setCategory(cat) {
     activeCat = cat;
     $$(".chip").forEach((c) => c.classList.toggle("is-active", c.dataset.cat === cat));
     $("#cat-hint").textContent = CAT_HINT[cat] || "";
+    // A chip chosen off-screen should not stay off-screen.
+    const chip = $('.chip[data-cat="' + cat + '"]');
+    if (chip) chip.scrollIntoView({
+      inline: "center", block: "nearest",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+    updateFilterFade();
     renderProducts();
   }
 
@@ -671,6 +686,7 @@
     checkoutForm.hidden = false;
     $("#order-success").hidden = true;
     renderSummary();
+    prefillCheckout();
     renderPayState();
     renderDeliveryNote();
     renderAssurance();
@@ -764,6 +780,7 @@
         ${note ? `<div class="note">Card reads: “${escapeHtml(note)}”</div>` : ""}
         <div class="muted">Demo store. Nothing was charged and nothing was sent.</div>`;
 
+      if (account) { account.orders = (account.orders || 0) + 1; saveAccount(); }
       checkoutForm.hidden = true;
       $("#order-success").hidden = false;
       $("#order-success .btn").focus();
@@ -827,8 +844,169 @@
     if (tile) openProduct(tile.dataset.id);
   });
 
+  /* ---------------- Sign in ----------------
+
+     DEMO ONLY. No SMS is sent and no OAuth round trip happens: the code is
+     generated in the page and shown on screen, and "Google" returns a fixed
+     sample profile. To make this real you need (a) an SMS/OTP provider or
+     Firebase Phone Auth, and (b) Google Identity Services with a client ID
+     plus a server to verify the ID token. Nothing here should be treated as
+     authentication.                                                        */
+
+  const authModal = $("#auth-modal");
+  const AUTH_KEY = "mishri-account";
+  let account = null;
+  try { account = JSON.parse(localStorage.getItem(AUTH_KEY) || "null"); } catch { account = null; }
+
+  let pendingPhone = "";
+  let pendingCode = "";
+
+  const initials = (name) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+  const prettyPhone = (d) => "+91 " + d.slice(0, 5) + " " + d.slice(5);
+
+  function saveAccount() {
+    try {
+      if (account) localStorage.setItem(AUTH_KEY, JSON.stringify(account));
+      else localStorage.removeItem(AUTH_KEY);
+    } catch {}
+  }
+
+  function showAuthStep(step) {
+    $$(".auth-step", authModal).forEach((el) => { el.hidden = el.id !== "auth-step-" + step; });
+  }
+
+  function renderAccount() {
+    const btn = $("#account-open");
+    const avatar = $("#account-avatar");
+    const icon = $("i", btn);
+    if (account) {
+      avatar.hidden = false;
+      avatar.textContent = initials(account.name);
+      icon.hidden = true;
+      btn.setAttribute("aria-label", account.name + ", account");
+      $("#menu-account").textContent = account.name.split(" ")[0] + "'s account";
+    } else {
+      avatar.hidden = true;
+      icon.hidden = false;
+      btn.setAttribute("aria-label", "Sign in");
+      $("#menu-account").textContent = "Sign in";
+    }
+  }
+
+  function renderAccountPanel() {
+    if (!account) return;
+    $("#account-avatar-lg").textContent = initials(account.name);
+    $("#account-name").textContent = account.name;
+    $("#account-detail").textContent =
+      account.via === "google" ? account.email + " · signed in with Google" : prettyPhone(account.phone);
+    const orders = account.orders || 0;
+    $("#account-stats").innerHTML = [
+      ["Saved for later", String(wishlist.length)],
+      ["In the basket", String(cartCount())],
+      ["Orders this session", String(orders)],
+    ].map(([k, v]) => `<li><span>${k}</span><strong>${escapeHtml(v)}</strong></li>`).join("");
+  }
+
+  function openAuth() {
+    document.querySelector(".island")?.classList.remove("is-tucked");
+    closeCart();
+    closeWishlist();
+    if (account) { renderAccountPanel(); showAuthStep("account"); }
+    else { showAuthStep("phone"); }
+    authModal.showModal();
+    const first = account ? $("#sign-out") : $("#auth-phone");
+    first?.focus();
+  }
+
+  $("#account-open").addEventListener("click", openAuth);
+  $("#menu-account").addEventListener("click", () => { setMenu(false); openAuth(); });
+
+  // --- phone step ---
+  $("#auth-phone").addEventListener("input", (e) => {
+    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+  });
+
+  $("#phone-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#auth-phone");
+    const digits = input.value.trim();
+    if (!/^[6-9]\d{9}$/.test(digits)) { setError(input, null); return; }
+    clearError(input);
+    pendingPhone = digits;
+    // Demo: the "sent" code is generated here and shown, never transmitted.
+    pendingCode = String(Math.floor(100000 + Math.random() * 900000));
+    $("#code-target").textContent = prettyPhone(digits);
+    $("#demo-code-note").textContent = "Demo code: " + pendingCode;
+    $("#auth-code").value = "";
+    clearError($("#auth-code"));
+    showAuthStep("code");
+    $("#auth-code").focus();
+  });
+
+  $("#auth-back").addEventListener("click", () => {
+    showAuthStep("phone");
+    $("#auth-phone").focus();
+  });
+
+  // --- code step ---
+  $("#auth-code").addEventListener("input", (e) => {
+    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    if (e.target.value.length === 6) clearError(e.target);
+  });
+
+  $("#code-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = $("#auth-code");
+    if (input.value.trim() !== pendingCode) { setError(input, null); input.select(); return; }
+    clearError(input);
+    signIn({ name: "Guest " + pendingPhone.slice(-4), phone: pendingPhone, via: "phone" });
+  });
+
+  // --- Google (mock) ---
+  $("#google-signin").addEventListener("click", () => {
+    const btn = $("#google-signin");
+    btn.disabled = true;
+    btn.textContent = "Opening Google";
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = GOOGLE_LABEL;
+      signIn({ name: "Aarti Sharma", email: "aarti.sharma@gmail.com", via: "google" });
+    }, 700);
+  });
+  const GOOGLE_LABEL = $("#google-signin").innerHTML;
+
+  function signIn(profile) {
+    account = Object.assign({ orders: 0 }, account, profile);
+    saveAccount();
+    renderAccount();
+    renderAccountPanel();
+    showAuthStep("account");
+    toast("Signed in as " + account.name);
+    prefillCheckout();
+  }
+
+  $("#sign-out").addEventListener("click", () => {
+    const who = account ? account.name : "";
+    account = null;
+    saveAccount();
+    renderAccount();
+    authModal.close();
+    toast(who ? "Signed out of " + who : "Signed out");
+  });
+
+  // A signed-in visitor should not retype what we already know.
+  function prefillCheckout() {
+    if (!account) return;
+    const name = $("#co-name"), phone = $("#co-phone");
+    if (name && !name.value && account.via === "google") name.value = account.name;
+    if (phone && !phone.value && account.phone) phone.value = prettyPhone(account.phone);
+  }
+
+  renderAccount();
+
   /* ---------------- Init ---------------- */
 
+  updateFilterFade();
   renderHeroStrip();
   renderProducts();
   renderBento();

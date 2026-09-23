@@ -458,14 +458,38 @@ main { padding-bottom: 30px; }
 }
 @media (max-width: 767px) {
   .shop-controls {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 0 14px;
+    position: relative;
+    z-index: 1;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    /* break the wrapper gutter so the scrolling chips run edge to edge */
+    margin-left: -16px; margin-right: -16px;
+    padding: 10px 16px 12px;
   }
-  .sort { align-self: flex-end; }
+  /* A fade on the right edge says there is more to scroll. */
+  .filters-wrap { position: relative; flex: 1; min-width: 0; }
+  .filters-wrap::after {
+    content: ""; position: absolute; top: 0; right: -1px; bottom: 0; width: 34px;
+    pointer-events: none; opacity: 0; transition: opacity 0.3s var(--spring);
+    background: linear-gradient(to right, transparent, var(--ground) 75%);
+  }
+  .filters-wrap.has-more::after { opacity: 1; }
+  .sort { flex: 0 0 auto; }
+  /* The trigger shrinks to its icon; the native picker still shows the labels. */
+  .sort select {
+    width: 48px; height: 44px; padding: 0; color: transparent; text-indent: -999px;
+  }
+  .sort::after { right: 17px; }
+  .sort::before {
+    content: ""; position: absolute; left: 13px; top: 50%; width: 16px; height: 16px;
+    transform: translateY(-50%); background: var(--ink-2); pointer-events: none;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 4h12M4 8h8M6 12h4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 4h12M4 8h8M6 12h4' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
 }
-.filters { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; padding: 4px; margin: -4px; flex: 1; min-width: 0; }
+.filters-wrap { flex: 1; min-width: 0; }
+.filters { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; padding: 4px; margin: -4px; scroll-padding-inline: 4px; }
 .filters::-webkit-scrollbar { display: none; }
 .chip {
   flex: 0 0 auto; height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--hair-strong);
@@ -550,7 +574,8 @@ main { padding-bottom: 30px; }
   .product-foot { justify-content: stretch; }
   .product-foot .add-btn { flex: 1; justify-content: space-between; }
 }
-.cat-hint { margin: -12px 0 28px; font-size: 0.9rem; color: var(--ink-2); min-height: 1.4em; }
+.cat-hint { margin: -12px 0 28px; font-size: 0.9rem; color: var(--ink-2); }
+.cat-hint:empty { display: none; }
 .shop-empty { text-align: center; color: var(--ink-2); padding: 64px 16px; display: grid; gap: 20px; justify-items: center; }
 .shop-empty-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 
@@ -826,6 +851,96 @@ input:focus, textarea:focus { outline: 0; border-color: var(--saffron); box-shad
 .receipt .muted { color: var(--ink-2); }
 .receipt .note { font-style: italic; color: var(--ink-2); }
 .receipt i { font-size: 16px; color: var(--pista-ink); }
+
+/* Sign in --------------------------------------------------------------- */
+
+.modal-auth { width: min(420px, calc(100% - 32px)); }
+.auth-step { padding: 40px 32px 32px; display: grid; gap: 0; }
+.modal-auth h2 { font-size: 1.9rem; margin-bottom: 8px; }
+.auth-sub { color: var(--ink-2); margin-bottom: 24px; }
+.auth-fine { margin-top: 16px; text-align: center; font-size: 0.78rem; color: var(--ink-2); }
+
+/* Google's mark sits on its own white chip in both themes, per brand guidance. */
+.btn-google {
+  width: 100%; height: 52px; gap: 12px; padding: 0 20px;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--hair-strong);
+  font-weight: 500;
+}
+.btn-google:hover { border-color: var(--ink-2); background: var(--shell); }
+.g-mark { flex-shrink: 0; }
+
+.auth-or {
+  display: flex; align-items: center; gap: 14px; margin: 22px 0;
+  color: var(--ink-2); font-size: 0.85rem;
+}
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--hair); }
+
+.phone-row {
+  display: flex; align-items: center; gap: 0;
+  border: 1px solid var(--hair-strong); border-radius: var(--r-md); background: var(--paper);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: border-color 0.4s var(--spring), box-shadow 0.4s var(--spring);
+}
+.phone-row:focus-within { border-color: var(--saffron); box-shadow: 0 0 0 3px rgba(232, 150, 30, 0.25); }
+.phone-cc {
+  padding: 0 12px 0 16px; font-weight: 600; color: var(--ink-2);
+  border-right: 1px solid var(--hair); line-height: 50px;
+}
+.phone-row input {
+  flex: 1; min-width: 0; height: 50px; padding: 0 16px; border: 0; background: transparent;
+  box-shadow: none; letter-spacing: 0.04em;
+}
+.phone-row input:focus { outline: 0; box-shadow: none; border: 0; }
+.field.has-error .phone-row { border-color: var(--danger); }
+
+.code-input {
+  text-align: center; font-family: var(--font-display); font-size: 2rem; font-weight: 600;
+  letter-spacing: 0.4em; text-indent: 0.4em; height: 68px;
+}
+
+.auth-back {
+  justify-self: start; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 12px 0 0; margin-bottom: 8px;
+  background: none; border: 0; color: var(--ink-2); font-size: 0.9rem;
+}
+.auth-back:hover { color: var(--ink); }
+
+/* Signed in */
+.auth-account { justify-items: center; text-align: center; }
+.avatar {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 999px;
+  background: var(--pink); color: var(--on-pink);
+  font-family: var(--font-display); font-weight: 600; font-size: 0.8rem; line-height: 1;
+}
+.avatar-lg { width: 72px; height: 72px; font-size: 1.8rem; margin-bottom: 16px; }
+#account-open .avatar { position: absolute; inset: 8px; width: 28px; height: 28px; }
+.account-stats {
+  list-style: none; margin: 4px 0 24px; padding: 0; width: 100%;
+  display: grid; gap: 1px; background: var(--hair); border: 1px solid var(--hair);
+  border-radius: var(--r-md); overflow: hidden;
+}
+.account-stats li {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; background: var(--paper); font-size: 0.925rem;
+}
+.account-stats strong { font-variant-numeric: tabular-nums; }
+
+/* The menu's own account row on small screens */
+.menu-account {
+  justify-self: start; margin-top: 18px; min-height: 44px;
+  padding: 0 20px; border-radius: 999px;
+  background: var(--saffron); color: var(--on-saffron); border: 0;
+  font-family: var(--font-display); font-weight: 600; font-size: 1.1rem;
+  opacity: 0; transform: translateY(24px);
+  animation: menu-rise 0.8s var(--spring) forwards;
+  animation-delay: calc(0.08s + var(--i) * 0.06s);
+}
+
+@media (max-width: 479px) {
+  .auth-step { padding: 32px 20px 24px; }
+  .modal-auth h2 { font-size: 1.6rem; }
+}
 
 /* Toast: under the island, clear of the drawer CTA ------------------------ */
 
