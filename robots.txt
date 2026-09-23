@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Demo and working files, not content.
+Disallow: /compare.html
+Disallow: /images/_orig/
+
+Sitemap: https://mishrisweethouse.example/sitemap.xml
