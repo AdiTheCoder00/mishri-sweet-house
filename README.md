@@ -59,16 +59,16 @@ The generator reads `products.js` for the catalogue and lifts the ribbon, nav an
 
 `sweets/`, `gifts/` and `mithai/` are disposable build output. Delete and regenerate freely.
 
-### Adding real copy per product
+### The per-product copy
 
-Thin pages do not rank. Each generated page currently carries the one-line `desc` from `products.js` plus shared facts (storage by category, delivery, ingredients). To add depth, give any product a `story` field in `products.js` and it will render below the description:
+Each product carries a `story` field in `products.js` (131–172 words, ~2,250 in total) that renders below the buy column as a **How we make it** section. With it each page runs to roughly 310–350 words of body text rather than a one-line description, which is the difference between a thin page and an indexable one.
 
 ```js
 { id: "kaju-katli", name: "Kaju Katli", /* … */
-  story: "150–300 words on where the cashews come from, how thin it is rolled, why the vark matters…" }
+  story: "Kaju Katli is the sweet people judge a shop by, because there is nowhere to hide…" }
 ```
 
-Aim for 150–300 unique words per product. That is the single biggest remaining SEO lever.
+**This copy is written demo content and should be replaced with the shop's own words.** It was written to stay inside what the rest of the site already commits to — desi ghee, whole milk, no artificial colour, the Sanganer dairy, five kilo batches, the delivery promise — and the preparation described for each sweet is how that sweet is generally made, not a claim about a specific kitchen. It invents no awards, certifications, suppliers, health claims or nutrition figures. Anything a real shop would want to say beyond that (who supplies the cashews, which family recipe, what changed in 1998) has to come from the shop.
 
 ## SEO
 
@@ -89,6 +89,7 @@ If you change `products.js`, the JSON-LD needs regenerating to match — it is a
 ## Before using this for real
 
 - **Replace the photography.** The images were pulled from Flickr by keyword for the demo. Shoot the actual products.
+- **The product stories are written demo copy.** See [The per-product copy](#the-per-product-copy). Replace them with the shop's own words.
 - **The reviews are invented.** They are labelled as sample content on the page; swap in real ones or remove the section.
 - **The batch times on the hero tiles are demo values**, as is the delivery PIN list.
 - There is no backend: no stock, no accounts, no payment integration.

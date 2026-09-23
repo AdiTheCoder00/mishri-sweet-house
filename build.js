@@ -225,7 +225,6 @@ ${crumbs(trail, base)}
             <h1>${esc(p.name)}</h1>
             <p class="pdp-meta">${esc(kind === "box" ? "Gift box" : p.category)} · ${esc(p.weight)}${serves ? " · " + esc(serves) : ""}</p>
             <p class="pdp-desc">${esc(p.desc)}</p>
-            ${p.story ? `<p class="pdp-story">${esc(p.story)}</p>` : ""}
             <p class="pdp-price">${inr(p.price)}</p>
             ${p.minQty ? `<p class="pdp-note">Minimum order ${p.minQty} boxes, in multiples of ${p.step || 1}.</p>` : ""}
 
@@ -243,6 +242,15 @@ ${crumbs(trail, base)}
             </dl>
           </div>
         </div>
+
+        ${
+          p.story
+            ? `<section class="pdp-story" aria-labelledby="story-h">
+          <h2 id="story-h">${kind === "box" ? "What is in it, and why" : "How we make it"}</h2>
+          <p>${esc(p.story)}</p>
+        </section>`
+            : ""
+        }
 
         ${
           related.length
