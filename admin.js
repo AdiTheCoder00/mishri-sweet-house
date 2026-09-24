@@ -1,11 +1,13 @@
 /* Mishri Sweet House. Shop admin: overview, catalogue edits, orders.
 
-   DEMO ONLY. Everything here lives in this browser's localStorage:
-   catalogue edits under "mishri-admin" (read by store-settings.js on the
-   storefront) and orders under "mishri-orders" (written by app.js at
-   checkout). The page itself sits behind a server-side sign-in (see
-   middleware.js); a real shop would also keep the catalogue and
-   orders on that server rather than in one browser. */
+   The page sits behind the server-side sign-in in middleware.js.
+
+   With the shop's server connected (Upstash Redis, see api/_lib/store.js)
+   orders and catalogue edits load from and save to /api/admin/*, so they
+   are shared by every visitor and every device. Without it the admin runs
+   in demo mode on this browser's localStorage: catalogue edits under
+   "mishri-admin" (read by store-settings.js) and orders under
+   "mishri-orders" (written by app.js at checkout). */
 (function () {
   "use strict";
 
@@ -21,6 +23,12 @@
   const STATUSES = { new: "New", preparing: "Preparing", dispatched: "Out for delivery", delivered: "Delivered", cancelled: "Cancelled" };
   const OPEN = ["new", "preparing", "dispatched"];
   const PAY = { upi: "UPI", card: "Card", cod: "Cash on delivery" };
+  // Online orders are only real once paid; cash on delivery ones straight away.
+  const awaitingPayment = (o) => Boolean(o.payment && o.payment.state === "pending");
+  const payLabel = (o) =>
+    !o.payment || o.payment.state === "cod" ? PAY[o.method] || o.method
+    : o.payment.state === "paid" ? `Paid online, ${PAY[o.method] || o.method}`
+    : `${PAY[o.method] || o.method}, awaiting payment`;
 
   // products.js is loaded untouched here, so these are the originals.
   const ITEMS = [
@@ -38,9 +46,53 @@
     try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; }
   };
 
-  let settings = read(SETTINGS_KEY, { items: {} });
-  if (!settings.items) settings.items = {};
-  let orders = read(ORDERS_KEY, []);
+  // Set at startup: true when /api/admin answers, so data lives on the server.
+  let LIVE = false;
+  let settings = { items: {} };
+  let orders = [];
+
+  async function api(method, path, body) {
+    const res = await fetch("/api/admin/" + path, {
+      method,
+      headers: body ? { "Content-Type": "application/json" } : {},
+      body: body ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+    });
+    // Session expired: back to sign-in rather than failing quietly.
+    if (res.status === 401) { location.href = "/admin-login.html"; throw new Error("signed-out"); }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Request failed");
+    return data;
+  }
+
+  // Saves the whole catalogue edit set. Demo: sync to localStorage.
+  // Live: optimistic, reloading the server copy if the save fails.
+  function persistSettings() {
+    if (!LIVE) return write(SETTINGS_KEY, settings);
+    api("PUT", "catalogue", settings)
+      .then((saved) => { settings = saved; })
+      .catch(async (e) => {
+        if (e.message === "signed-out") return;
+        toast("Could not save to the shop's server. Showing the last saved version.");
+        try { settings = await api("GET", "catalogue"); } catch {}
+        render();
+      });
+    return true;
+  }
+
+  function persistOrderStatus(order) {
+    if (!LIVE) { saveOrders(); return; }
+    api("PATCH", "orders", { no: order.no, status: order.status }).catch(async (e) => {
+      if (e.message === "signed-out") return;
+      toast(`Could not update ${order.no}. Showing the saved orders.`);
+      await refreshOrders();
+    });
+  }
+
+  async function refreshOrders() {
+    if (!LIVE) return;
+    try { orders = (await api("GET", "orders")).orders; render(); } catch {}
+  }
 
   const edits = (id) => settings.items[id] || {};
   const current = (id) => {
@@ -59,7 +111,7 @@
     const same = key === "status" ? value === "live" : value === base[key];
     if (same) delete e[key]; else e[key] = value;
     if (Object.keys(e).length) settings.items[id] = e; else delete settings.items[id];
-    return write(SETTINGS_KEY, settings);
+    return persistSettings();
   }
 
   function saveOrders() { write(ORDERS_KEY, orders); }
@@ -112,7 +164,12 @@
     });
     render();
   }
-  window.addEventListener("hashchange", () => { showTab(); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => {
+    showTab();
+    window.scrollTo(0, 0);
+    // Customers keep ordering while the admin is open: fetch the latest.
+    refreshOrders();
+  });
 
   /* ---------------- overview ---------------- */
 
@@ -123,9 +180,9 @@
 
   function renderOverview() {
     $("#overview-date").textContent = new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
-    const live = orders.filter((o) => o.status !== "cancelled");
+    const live = orders.filter((o) => o.status !== "cancelled" && !awaitingPayment(o));
     const today = live.filter((o) => isToday(o.at));
-    const open = orders.filter((o) => OPEN.includes(o.status));
+    const open = live.filter((o) => OPEN.includes(o.status));
     const counts = { live: 0, soldout: 0, hidden: 0 };
     ITEMS.forEach((i) => { counts[current(i.id).status]++; });
 
@@ -137,8 +194,8 @@
       </div>`;
     $("#stats").innerHTML =
       stat("Orders today", today.length, today.length ? inr(today.reduce((n, o) => n + o.total, 0)) + " taken" : "None yet") +
-      stat("To fulfil", open.length, `${orders.filter((o) => o.status === "new").length} new, ${orders.filter((o) => o.status === "dispatched").length} out for delivery`) +
-      stat("Takings", inr(live.reduce((n, o) => n + o.total, 0)), `${live.length} order${live.length === 1 ? "" : "s"}, cancelled excluded`) +
+      stat("To fulfil", open.length, `${live.filter((o) => o.status === "new").length} new, ${live.filter((o) => o.status === "dispatched").length} out for delivery`) +
+      stat("Takings", inr(live.reduce((n, o) => n + o.total, 0)), `${live.length} order${live.length === 1 ? "" : "s"}, cancelled and unpaid excluded`) +
       stat("On sale", `${counts.live}<small> / ${ITEMS.length}</small>`, `${counts.soldout} sold out, ${counts.hidden} hidden`);
 
     const recent = orders.slice(0, 5);
@@ -146,12 +203,12 @@
       ? `<ul class="admin-mini">${recent.map((o) => `
           <li>
             <span><strong>${escapeHtml(o.no)}</strong> ${escapeHtml(o.customer.name)}, ${escapeHtml(o.customer.city)}</span>
-            <span>${inr(o.total)} ${statusPill(o.status)}</span>
+            <span>${inr(o.total)} ${awaitingPayment(o) ? '<span class="admin-pill is-unpaid">Unpaid</span>' : statusPill(o.status)}</span>
           </li>`).join("")}</ul>`
       : `<p class="admin-empty">No orders yet. Place one through checkout on the <a href="index.html#shop" class="admin-link">store</a> and it appears here.</p>`;
 
     const notes = [];
-    const fresh = orders.filter((o) => o.status === "new");
+    const fresh = orders.filter((o) => o.status === "new" && !awaitingPayment(o));
     if (fresh.length) notes.push(`<li><i class="ph-light ph-bell-ringing" aria-hidden="true"></i><a href="#orders" data-go-filter="new">${fresh.length} new order${fresh.length === 1 ? "" : "s"} waiting to be prepared</a></li>`);
     ITEMS.filter((i) => current(i.id).status === "soldout").forEach((i) =>
       notes.push(`<li><i class="ph-light ph-prohibit" aria-hidden="true"></i><span>${escapeHtml(current(i.id).name)} is marked sold out</span></li>`));
@@ -284,11 +341,11 @@
     if (e.target.closest("[data-restore]")) {
       const before = Object.assign({}, edits(id));
       delete settings.items[id];
-      write(SETTINGS_KEY, settings);
+      persistSettings();
       renderCatalogue();
       toast(`${original(id).name} restored`, {
         label: "Undo",
-        onClick: () => { settings.items[id] = before; write(SETTINGS_KEY, settings); renderCatalogue(); },
+        onClick: () => { settings.items[id] = before; persistSettings(); renderCatalogue(); },
       });
     }
   });
@@ -317,9 +374,9 @@
     if (!confirm(`Restore all ${n} edited item${n === 1 ? "" : "s"} to the prices, copy and availability in products.js?`)) return;
     const before = settings;
     settings = { items: {} };
-    write(SETTINGS_KEY, settings);
+    persistSettings();
     renderCatalogue();
-    toast("Catalogue restored", { label: "Undo", onClick: () => { settings = before; write(SETTINGS_KEY, settings); renderCatalogue(); } });
+    toast("Catalogue restored", { label: "Undo", onClick: () => { settings = before; persistSettings(); renderCatalogue(); } });
   });
 
   /* ---------------- orders ---------------- */
@@ -340,8 +397,8 @@
       <article class="admin-order is-${o.status}" data-no="${escapeHtml(o.no)}">
         <div class="admin-order-head">
           <div>
-            <h3>${escapeHtml(o.no)} ${statusPill(o.status)}</h3>
-            <span class="admin-order-when">${fmtDate(o.at)} · ${PAY[o.method] || escapeHtml(o.method)}</span>
+            <h3>${escapeHtml(o.no)} ${statusPill(o.status)}${awaitingPayment(o) ? ' <span class="admin-pill is-unpaid">Unpaid</span>' : ""}</h3>
+            <span class="admin-order-when">${fmtDate(o.at)} · ${escapeHtml(payLabel(o))}${o.payment && o.payment.paymentId ? ` · <span class="admin-payment-id">${escapeHtml(o.payment.paymentId)}</span>` : ""}</span>
           </div>
           <label class="sort admin-order-status">
             <span class="sr-only">Status of ${escapeHtml(o.no)}</span>
@@ -359,7 +416,8 @@
           </div>
           <div class="admin-order-lines">
             ${o.lines.map((l) => `<div class="row"><span>${escapeHtml(l.name)} × ${l.qty}</span><span>${inr(l.price * l.qty)}</span></div>`).join("")}
-            <div class="row total"><span>${o.method === "cod" ? "Due on delivery" : "Total"}</span><span>${inr(o.total)}</span></div>
+            ${o.delivery !== undefined ? `<div class="row"><span>Delivery</span><span>${o.delivery ? inr(o.delivery) : "Free"}</span></div>` : ""}
+            <div class="row total"><span>${o.method === "cod" ? "Due on delivery" : o.payment && o.payment.state === "paid" ? "Paid" : "Total"}</span><span>${inr(o.total)}</span></div>
           </div>
         </div>
       </article>`;
@@ -386,12 +444,12 @@
     const order = orders.find((o) => o.no === sel.closest(".admin-order").dataset.no);
     const prev = order.status;
     order.status = sel.value;
-    saveOrders();
+    persistOrderStatus(order);
     renderOrders();
     renderOverview();
     toast(`${order.no}: ${STATUSES[order.status].toLowerCase()}`, {
       label: "Undo",
-      onClick: () => { order.status = prev; saveOrders(); renderOrders(); renderOverview(); },
+      onClick: () => { order.status = prev; persistOrderStatus(order); renderOrders(); renderOverview(); },
     });
   });
   $("#order-filters").addEventListener("click", (e) => {
@@ -405,10 +463,10 @@
   $("#orders-export").addEventListener("click", () => {
     if (!orders.length) { toast("No orders to export"); return; }
     const cell = (v) => `"${String(v).replace(/"/g, '""')}"`;
-    const rows = [["Order", "Placed", "Status", "Name", "Phone", "Address", "City", "PIN", "Payment", "Items", "Total", "Card note"]]
+    const rows = [["Order", "Placed", "Status", "Name", "Phone", "Address", "City", "PIN", "Payment", "Payment ID", "Items", "Total", "Card note"]]
       .concat(orders.map((o) => [
         o.no, o.at, STATUSES[o.status], o.customer.name, o.customer.phone, o.customer.address, o.customer.city, o.customer.pin,
-        PAY[o.method] || o.method, o.lines.map((l) => `${l.name} x ${l.qty}`).join("; "), o.total, o.note || "",
+        payLabel(o), (o.payment && o.payment.paymentId) || "", o.lines.map((l) => `${l.name} x ${l.qty}`).join("; "), o.total, o.note || "",
       ]));
     const blob = new Blob([rows.map((r) => r.map(cell).join(",")).join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
@@ -436,13 +494,40 @@
     if (!$("#panel-orders").hidden) renderOrders();
   }
 
-  // An order placed in the store tab shows up here without a reload.
+  // Demo: an order placed in the store tab shows up here without a reload.
   window.addEventListener("storage", (e) => {
+    if (LIVE) return;
     if (e.key === ORDERS_KEY) orders = read(ORDERS_KEY, []);
     else if (e.key === SETTINGS_KEY) { settings = read(SETTINGS_KEY, { items: {} }); if (!settings.items) settings.items = {}; }
     else return;
     render();
   });
 
-  showTab();
+  /* ---------------- start ---------------- */
+
+  async function start() {
+    try {
+      const [cat, list] = await Promise.all([api("GET", "catalogue"), api("GET", "orders")]);
+      LIVE = true;
+      settings = cat && cat.items ? cat : { items: {} };
+      orders = list.orders;
+    } catch (e) {
+      if (e.message === "signed-out") return;
+      // No server (demo mode, or running from plain files): use this browser.
+      settings = read(SETTINGS_KEY, { items: {} });
+      if (!settings.items) settings.items = {};
+      orders = read(ORDERS_KEY, []);
+    }
+    $("#admin-note-text").textContent = LIVE
+      ? "Orders and catalogue changes are saved on the shop's server and reach every customer. New orders appear here within 30 seconds."
+      : "Demo mode: no database is connected, so catalogue changes and orders are kept in this browser only. Connect Upstash Redis in Vercel to share them with every customer.";
+    $("#orders-clear").hidden = LIVE;
+    if (LIVE) {
+      // Orders arrive from customers' browsers; check for new ones regularly.
+      setInterval(() => { if (!document.hidden) refreshOrders(); }, 30000);
+      document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshOrders(); });
+    }
+    showTab();
+  }
+  start();
 })();

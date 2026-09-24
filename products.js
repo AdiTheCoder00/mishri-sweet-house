@@ -184,3 +184,9 @@ const GIFT_BOXES = [
     img: "images/box-wedding.webp",
   },
 ];
+
+// Delivery pricing, shared by the checkout and the order server.
+const DELIVERY = { freeOver: 999, fee: 79 };
+
+// The order server (api/) reads the catalogue from this same file.
+if (typeof module !== "undefined" && module.exports) module.exports = { PRODUCTS, GIFT_BOXES, DELIVERY };

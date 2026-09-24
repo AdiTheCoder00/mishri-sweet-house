@@ -50,6 +50,7 @@
     <p class="login-lede">Sign in to manage the catalogue and orders.</p>
 
     <div class="login-msg is-error" id="msg-wrong" role="alert" hidden><i class="ph-light ph-warning-circle" aria-hidden="true"></i><span>That password is not right. Try again.</span></div>
+    <div class="login-msg is-error" id="msg-locked" role="alert" hidden><i class="ph-light ph-clock" aria-hidden="true"></i><span>Too many wrong passwords from this connection. Sign-in is paused for 15 minutes.</span></div>
     <div class="login-msg is-error" id="msg-setup" role="alert" hidden><i class="ph-light ph-lock-key" aria-hidden="true"></i><span>Sign-in is not set up yet. Set the <code>ADMIN_PASSWORD</code> environment variable on the server, then redeploy.</span></div>
     <div class="login-msg is-info" id="msg-out" role="status" hidden><i class="ph-light ph-check-circle" aria-hidden="true"></i><span>You are signed out.</span></div>
 
@@ -80,6 +81,7 @@
       const show = (id) => { document.getElementById(id).hidden = false; };
       if (q.get("error") === "wrong") show("msg-wrong");
       if (q.get("error") === "setup") show("msg-setup");
+      if (q.get("error") === "locked") show("msg-locked");
       if (q.has("signed-out")) show("msg-out");
 
       const input = document.getElementById("password");

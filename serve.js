@@ -1,5 +1,7 @@
 // Tiny static server for the demo. Run: node serve.js  (then open http://localhost:5173)
 // The shop admin needs a password: ADMIN_PASSWORD='your password' node serve.js
+// The api/ routes run here too, reading the same environment variables as on
+// Vercel; without KV_REST_API_URL and KV_REST_API_TOKEN the site stays in demo mode.
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
@@ -31,13 +33,38 @@ async function adminGate(middleware, req, res) {
   return true;
 }
 
+// /api/orders -> api/orders.js, calling its GET/POST/... export like Vercel does.
+// Files under api/_lib are helpers, not routes.
+async function apiRoute(req, res, body) {
+  const route = req.url.split("?")[0].replace(/\/+$/, "");
+  if (!/^\/api\/[a-z0-9/-]+$/.test(route) || route.includes("/_")) return false;
+  const file = path.join(ROOT, route + ".js");
+  if (!fs.existsSync(file)) return false;
+  const handler = (await import(require("url").pathToFileURL(file).href))[req.method];
+  const headers = new Headers();
+  for (const [k, v] of Object.entries(req.headers)) if (typeof v === "string") headers.set(k, v);
+  headers.set("x-real-ip", req.socket.remoteAddress || "local");
+  const reply = handler
+    ? await handler(new Request(`http://${req.headers.host || "localhost"}${req.url}`, { method: req.method, headers, body: body && body.length ? body : undefined }))
+    : new Response("Method not allowed", { status: 405 });
+  const out = {};
+  reply.headers.forEach((v, k) => { if (k !== "set-cookie") out[k] = v; });
+  res.writeHead(reply.status, out);
+  res.end(Buffer.from(await reply.arrayBuffer()));
+  return true;
+}
+
 // middleware.js is written as an ES module for Vercel; load it the same way here.
 const source = fs.readFileSync(path.join(ROOT, "middleware.js"));
 import("data:text/javascript;base64," + source.toString("base64")).then(({ default: middleware }) => {
   http.createServer(async (req, res) => {
     try {
-      if (await adminGate(middleware, req, res)) return;
-    } catch {
+      if (req.url.startsWith("/api/")) {
+        const body = ["POST", "PUT", "PATCH", "DELETE"].includes(req.method) ? await readBody(req) : undefined;
+        if (await apiRoute(req, res, body)) return;
+      } else if (await adminGate(middleware, req, res)) return;
+    } catch (e) {
+      console.error(e);
       res.writeHead(500); return res.end();
     }
     let file = path.join(ROOT, decodeURIComponent(req.url.split("?")[0]));
