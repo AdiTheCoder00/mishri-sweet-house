@@ -131,6 +131,8 @@
 /* Base --------------------------------------------------------------- */
 
 *, *::before, *::after { box-sizing: border-box; }
+/* Lenis (smooth-scroll.js) does the easing; native smooth scrolling would fight it. */
+html.lenis { scroll-behavior: auto; }
 html { scroll-behavior: smooth; scroll-padding-top: calc(var(--ribbon-h) + 100px); scrollbar-color: var(--hair-strong) transparent; scrollbar-width: thin; }
 body {
   margin: 0;
@@ -514,7 +516,19 @@ main { padding-bottom: 30px; }
 .product-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; } }
 @media (min-width: 1100px) { .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; } }
-@media (max-width: 479px) { .product-grid { grid-template-columns: 1fr; } }
+/* Two columns on phones too, with a tighter card so each one still reads. */
+@media (max-width: 479px) {
+  .product-grid { gap: 12px; }
+  .product-grid .product-body { padding: 12px; }
+  .product-grid .product-name { font-size: 1.02rem; }
+  .product-grid .product-meta { font-size: 0.8rem; }
+  /* The heart holds the top corner; the tag drops to the bottom so neither is cut short. */
+  .product-grid .product-tag {
+    top: auto; bottom: 8px; left: 8px; height: 22px; padding: 0 7px; line-height: 22px; font-size: 9.5px; letter-spacing: 0.02em;
+    max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .product-grid .wish-btn { top: 4px; right: 4px; }
+}
 
 .product { animation: rise 0.8s var(--spring) both; animation-delay: calc(var(--i, 0) * 50ms); }
 .product .bezel:hover { transform: translateY(-4px); box-shadow: var(--shadow-soft); border-color: var(--hair-strong); }
@@ -568,6 +582,8 @@ main { padding-bottom: 30px; }
 .add-btn:hover .btn-ico { background: rgba(26, 26, 34, 0.12); }
 .add-btn:active { transform: scale(0.96); }
 .add-btn.in-basket { border-color: var(--saffron); }
+.add-btn[disabled] { padding: 0 16px; color: var(--ink-2); border-style: dashed; cursor: not-allowed; }
+.add-btn[disabled]:hover { background: transparent; color: var(--ink-2); border-color: var(--hair-strong); }
 .add-btn.in-basket .btn-ico { background: var(--saffron); color: var(--on-saffron); font-size: 13px; font-weight: 700; }
 
 @media (max-width: 479px) {
@@ -706,6 +722,8 @@ main { padding-bottom: 30px; }
 .footer-col h3 { margin-bottom: 8px; font-size: 1rem; }
 .footer-col a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); transition: color 0.4s var(--spring); }
 .footer-col a:hover { color: var(--ink); }
+.footer-admin { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair-strong); }
+.footer-admin:hover { color: var(--ink); text-decoration-color: currentColor; }
 .footer-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--hair); font-size: 0.85rem; color: var(--ink-2); }
 
 /* Forms ------------------------------------------------------------------- */
@@ -1068,3 +1086,34 @@ body.no-scroll { overflow: hidden; }
 .plp-link .product-body { gap: 4px; }
 .plp-link .product-name, .plp-link .product-meta, .plp-link .product-price { display: block; }
 .plp-link .product-price { margin-top: 8px; font-weight: 700; }
+
+/* Small screens ---------------------------------------------------------- */
+
+/* The floating chat button would sit on top of drawer and dialog CTAs. */
+body.no-scroll .whatsapp-float,
+body:has(dialog[open]) .whatsapp-float { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* Five 44px actions leave no room for the wordmark on the narrowest phones;
+   the mark stays and the link keeps its aria-label. */
+@media (max-width: 359px) {
+  .brand-name { display: none; }
+}
+
+@media (max-width: 479px) {
+  /* Email and button share one pill on wider screens; stacked, both stay usable. */
+  .newsletter-row { flex-direction: column; border-radius: var(--r-lg); }
+  .newsletter-row .btn { width: 100%; justify-content: space-between; }
+
+  .bento-body { padding: 24px; }
+  .bento-foot { flex-wrap: wrap; }
+  .bento-foot .add-btn { flex: 1 0 100%; justify-content: space-between; }
+
+  .pdp-actions .btn { width: 100%; justify-content: space-between; }
+  .pdp-actions .btn:not(:has(.btn-ico)) { justify-content: center; }
+}
+
+@media (max-width: 767px) {
+  .footer { padding-top: 64px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px 16px; }
+  .footer-brand { grid-column: 1 / -1; }
+}

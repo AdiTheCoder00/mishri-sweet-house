@@ -118,7 +118,8 @@
 
   let cart = [];
   try { cart = JSON.parse(localStorage.getItem("mishri-cart") || "[]"); } catch { cart = []; }
-  cart = cart.filter((line) => findItem(line.id));
+  // Lines for anything since hidden or sold out in the admin drop out of the basket.
+  cart = cart.filter((line) => findItem(line.id) && !findItem(line.id).soldOut);
 
   function saveCart() {
     try { localStorage.setItem("mishri-cart", JSON.stringify(cart)); } catch {}
@@ -140,6 +141,7 @@
 
   function addToCart(id, qty) {
     const p = findItem(id);
+    if (p.soldOut) { toast(`${p.name} is sold out today`); return; }
     const line = cart.find((l) => l.id === id);
     const add = qty || minQty(id);
     const wanted = line ? line.qty + add : Math.max(add, minQty(id));
@@ -190,6 +192,9 @@
     });
   }
 
+  // smooth-scroll.js eases the move when it is running.
+  const goToShop = () => (window.mishriScrollTo ? window.mishriScrollTo("#shop") : (location.hash = "#shop"));
+
   /* ---------------- Cart drawer ---------------- */
 
   const drawer = $("#cart-drawer");
@@ -221,7 +226,7 @@
   $("#cart-open").addEventListener("click", openCart);
   $("#cart-close").addEventListener("click", closeCart);
   overlay.addEventListener("click", closeCart);
-  $("#cart-empty-cta").addEventListener("click", () => { closeCart(); location.hash = "#shop"; });
+  $("#cart-empty-cta").addEventListener("click", () => { closeCart(); goToShop(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && drawer.classList.contains("is-open")) closeCart(); });
 
   function renderCart() {
@@ -330,7 +335,7 @@
   $("#wishlist-open").addEventListener("click", () => { closeCart(); openWishlist(); });
   $("#wishlist-close").addEventListener("click", closeWishlist);
   overlay.addEventListener("click", closeWishlist);
-  $("#wishlist-empty-cta").addEventListener("click", () => { closeWishlist(); location.hash = "#shop"; });
+  $("#wishlist-empty-cta").addEventListener("click", () => { closeWishlist(); goToShop(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && wishDrawer.classList.contains("is-open")) closeWishlist(); });
 
   function renderWishlist() {
@@ -363,15 +368,16 @@
   });
   // Moving empties the wishlist, so tapping twice cannot duplicate the basket.
   $("#wishlist-add-all").addEventListener("click", () => {
-    const moved = wishlist.length;
-    if (!moved) return;
-    wishlist.forEach((id) => {
+    const available = wishlist.filter((id) => !findItem(id).soldOut);
+    const moved = available.length;
+    if (!moved) { if (wishlist.length) toast("Everything saved is sold out today"); return; }
+    available.forEach((id) => {
       const line = cart.find((l) => l.id === id);
       if (line) line.qty = Math.min(MAX_QTY, line.qty + minQty(id));
       else cart.push({ id, qty: minQty(id) });
     });
-    const previous = wishlist.slice();
-    wishlist = [];
+    const previous = available;
+    wishlist = wishlist.filter((id) => !available.includes(id));
     try { localStorage.setItem("mishri-wishlist", JSON.stringify(wishlist)); } catch {}
     saveCart();
     renderCart();
@@ -408,6 +414,7 @@
 
   const basketQty = (id) => (cart.find((l) => l.id === id) || {}).qty || 0;
   const addLabel = (name, n) => n ? `${name}, ${n} in basket. Add another` : `Add ${name} to basket`;
+  const soldOutBtn = `<button class="add-btn is-sold-out" disabled>Sold out</button>`;
   const addBtnInner = (n) => `${n ? "Added" : "Add"}<span class="btn-ico">${n ? n : '<i class="ph-light ph-plus" aria-hidden="true"></i>'}</span>`;
 
   function productCard(p) {
@@ -427,7 +434,7 @@
               <div class="product-meta">${escapeHtml(p.category)} · ${escapeHtml(p.weight)}${serves ? " · " + serves : ""}</div>
               <div class="product-foot">
                 <span class="product-price">${inr(p.price)}</span>
-                <button class="add-btn${n ? " in-basket" : ""}" data-add aria-label="${escapeHtml(addLabel(p.name, n))}">${addBtnInner(n)}</button>
+                ${p.soldOut ? soldOutBtn : `<button class="add-btn${n ? " in-basket" : ""}" data-add aria-label="${escapeHtml(addLabel(p.name, n))}">${addBtnInner(n)}</button>`}
               </div>
             </div>
           </div>
@@ -553,7 +560,7 @@
           <p>${escapeHtml(b.desc)}</p>
           <div class="bento-foot">
             <span class="price">${inr(b.price)} <small>/ ${escapeHtml(b.weight)}</small></span>
-            <button class="add-btn${n ? " in-basket" : ""}" data-add aria-label="${escapeHtml(addLabel(b.name, n))}">${addBtnInner(n)}</button>
+            ${b.soldOut ? soldOutBtn : `<button class="add-btn${n ? " in-basket" : ""}" data-add aria-label="${escapeHtml(addLabel(b.name, n))}">${addBtnInner(n)}</button>`}
           </div>
         </div>
       </div>`;
@@ -603,7 +610,7 @@
             <span id="pm-qty">${minQty(p.id)}</span>
             <button type="button" data-inc aria-label="Increase quantity"><i class="ph-light ph-plus"></i></button>
           </div>
-          <button class="btn btn-primary" id="pm-add">Add to basket <span class="btn-ico"><i class="ph-light ph-plus" aria-hidden="true"></i></span></button>
+          <button class="btn btn-primary" id="pm-add"${p.soldOut ? " disabled" : ""}>${p.soldOut ? "Sold out today" : "Add to basket"} <span class="btn-ico"><i class="ph-light ph-plus" aria-hidden="true"></i></span></button>
           ${wishButton(p.id, p.name)}
         </div>
       </div>`;
@@ -717,7 +724,8 @@
   function clearError(input) {
     const field = input.closest(".field");
     field.classList.remove("has-error");
-    field.querySelector(".field-error").hidden = true;
+    const err = field.querySelector(".field-error");
+    if (err) err.hidden = true;
     input.removeAttribute("aria-invalid");
     input.removeAttribute("aria-describedby");
     return true;
@@ -781,6 +789,11 @@
         <div class="muted">Demo store. Nothing was charged and nothing was sent.</div>`;
 
       if (account) { account.orders = (account.orders || 0) + 1; saveAccount(); }
+      recordOrder({
+        no: orderNo, at: new Date().toISOString(), status: "new", method, total,
+        customer: { name: $("#co-name").value.trim(), phone: $("#co-phone").value.trim(), address: $("#co-address").value.trim(), city, pin },
+        note, lines: cart.map((l) => { const p = findItem(l.id); return { id: l.id, name: p.name, qty: l.qty, price: p.price }; }),
+      });
       checkoutForm.hidden = true;
       $("#order-success").hidden = false;
       $("#order-success .btn").focus();
@@ -794,6 +807,15 @@
       $("#delivery-note").hidden = true;
     }, 1100);
   });
+
+  // Orders are kept in this browser so admin.html can list and manage them.
+  function recordOrder(order) {
+    try {
+      const orders = JSON.parse(localStorage.getItem("mishri-orders") || "[]");
+      orders.unshift(order);
+      localStorage.setItem("mishri-orders", JSON.stringify(orders.slice(0, 500)));
+    } catch {}
+  }
 
   /* Close buttons and backdrop clicks for both dialogs */
   $$(".modal").forEach((dlg) => {

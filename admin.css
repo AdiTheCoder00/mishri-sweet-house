@@ -1,0 +1,190 @@
+/* ------------------------------------------------------------------
+   Mishri Sweet House. Shop admin.
+   Sits on styles.css for tokens, type, buttons, chips and inputs.
+   Quieter than the storefront: paper cards on the ground, pink used
+   only for the brand mark, saffron only for focus and the active state.
+------------------------------------------------------------------ */
+
+body.admin { padding-bottom: 64px; }
+
+/* Bar ---------------------------------------------------------------- */
+
+.admin-bar {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--ground) 86%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--hair);
+}
+.admin-bar-inner { display: flex; align-items: center; gap: 16px; min-height: 68px; flex-wrap: wrap; }
+.admin-brand-sub { margin-left: 4px; font-family: var(--font-body); font-weight: 500; font-size: 0.85rem; color: var(--ink-2); letter-spacing: 0; }
+.admin-tabs { display: flex; gap: 4px; margin-right: auto; }
+.admin-tabs a {
+  display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: 999px;
+  font-weight: 500; color: var(--ink-2); transition: color 0.4s var(--spring), background-color 0.4s var(--spring);
+}
+.admin-tabs a:hover { color: var(--ink); background: var(--shell); }
+.admin-tabs a[aria-current="page"] { color: var(--ground); background: var(--ink); }
+.admin-count {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--saffron); color: var(--on-saffron); font-size: 0.75rem; font-weight: 700;
+}
+.admin-bar-actions { display: flex; align-items: center; gap: 4px; }
+.admin-signout { display: contents; }
+.admin-store-link {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--hair-strong); font-weight: 500; transition: border-color 0.4s var(--spring);
+}
+.admin-store-link:hover { border-color: var(--ink); }
+.admin-store-link i { font-size: 18px; }
+
+@media (max-width: 719px) {
+  .admin-bar-inner { gap: 4px 8px; padding-top: 8px; padding-bottom: 8px; }
+  .admin-brand-sub { display: none; }
+  .admin-bar-actions { margin-left: auto; }
+  .admin-tabs { order: 3; width: 100%; margin: 0 -4px; overflow-x: auto; scrollbar-width: none; }
+  .admin-store-link span { display: none; }
+  .admin-store-link { width: 44px; padding: 0; justify-content: center; }
+}
+
+/* Layout -------------------------------------------------------------- */
+
+.admin-main { padding-top: 24px; }
+.admin-panel { padding: 0; }
+.admin-note {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; margin-bottom: 32px;
+  border-radius: var(--r-md); background: var(--shell); color: var(--ink-2); font-size: 0.9rem;
+}
+.admin-note i { font-size: 18px; margin-top: 2px; flex: 0 0 auto; }
+.admin-head { margin-bottom: 24px; }
+.admin-head h1 { font-size: clamp(2rem, 4.4vw, 3rem); letter-spacing: -0.03em; }
+.admin-lede { margin-top: 8px; color: var(--ink-2); }
+.admin-empty { color: var(--ink-2); padding: 8px 0; }
+.admin-foot-note { margin-top: 24px; font-size: 0.875rem; color: var(--ink-2); max-width: 70ch; }
+.admin-foot-note code { font-size: 0.85em; padding: 1px 6px; border-radius: 6px; background: var(--shell); }
+.admin-link {
+  background: none; border: 0; padding: 0; color: var(--ink); font-weight: 500;
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair-strong);
+}
+.admin-link:hover { text-decoration-color: currentColor; }
+
+.admin-card { padding: 20px; border-radius: var(--r-lg); background: var(--paper); border: 1px solid var(--hair); }
+.admin-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.admin-card-head h2 { font-size: 1.25rem; letter-spacing: -0.01em; }
+.admin-split { display: grid; gap: 16px; margin-top: 16px; }
+@media (min-width: 900px) { .admin-split { grid-template-columns: 3fr 2fr; } }
+
+/* Overview ------------------------------------------------------------- */
+
+.admin-stats { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 900px) { .admin-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; } }
+.admin-stat { display: flex; flex-direction: column; gap: 4px; padding: 18px 20px; border-radius: var(--r-lg); background: var(--paper); border: 1px solid var(--hair); min-width: 0; }
+.admin-stat-label { font-size: 0.85rem; font-weight: 500; color: var(--ink-2); }
+.admin-stat-value { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.6rem, 3.4vw, 2.2rem); letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.admin-stat-value small { font-size: 0.55em; color: var(--ink-2); font-weight: 500; }
+.admin-stat-sub { font-size: 0.85rem; color: var(--ink-2); }
+
+.admin-mini { list-style: none; margin: 0; padding: 0; }
+.admin-mini li { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid var(--hair); }
+.admin-mini li > span:last-child { display: inline-flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
+.admin-attention { list-style: none; margin: 0; padding: 0; }
+.admin-attention li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--hair); }
+.admin-attention i { font-size: 20px; color: var(--ink-2); flex: 0 0 auto; }
+.admin-attention a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair-strong); }
+
+.admin-pill {
+  display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px;
+  font-family: var(--font-body); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; vertical-align: middle;
+  background: var(--shell); color: var(--ink-2);
+}
+.admin-pill.is-new { background: var(--saffron); color: var(--on-saffron); }
+.admin-pill.is-preparing { background: var(--pink-soft); color: var(--ink); }
+.admin-pill.is-dispatched { background: var(--pista-soft); color: var(--pista-ink); }
+.admin-pill.is-delivered { background: transparent; border: 1px solid var(--hair-strong); }
+.admin-pill.is-cancelled { background: transparent; color: var(--danger); border: 1px solid currentColor; }
+
+/* Toolbar -------------------------------------------------------------- */
+
+.admin-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 20px; }
+.admin-toolbar input[type="search"] {
+  flex: 1 1 240px; max-width: 360px; height: 44px; padding: 0 18px; border-radius: 999px;
+  border: 1px solid var(--hair-strong); background: var(--paper);
+}
+.admin-toolbar input[type="search"]:focus { outline: 0; border-color: var(--saffron); box-shadow: 0 0 0 3px rgba(232, 150, 30, 0.25); }
+.admin-toolbar .filters { flex: 1 1 auto; min-width: 0; }
+.btn.admin-sm { height: 44px; padding: 0 18px; }
+.admin-danger { color: var(--danger); }
+.admin-danger:hover { border-color: var(--danger); }
+.admin-chip-n { margin-left: 4px; font-size: 0.8em; opacity: 0.7; font-variant-numeric: tabular-nums; }
+
+/* Catalogue ------------------------------------------------------------ */
+
+.admin-items { display: grid; gap: 16px; }
+@media (min-width: 1100px) { .admin-items { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.admin-item {
+  display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 16px; padding: 16px;
+  border-radius: var(--r-lg); background: var(--paper); border: 1px solid var(--hair);
+  transition: opacity 0.4s var(--spring);
+}
+@media (min-width: 600px) { .admin-item { grid-template-columns: 120px minmax(0, 1fr); gap: 20px; padding: 20px; } }
+.admin-item-media img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--r-md); background: var(--pink-soft); }
+.admin-item.is-hidden .admin-item-media { opacity: 0.4; filter: grayscale(1); }
+.admin-item.is-soldout .admin-item-media { opacity: 0.7; }
+.admin-item-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.admin-item-head h3 { font-size: 1.25rem; }
+.admin-item-kicker { display: block; margin-bottom: 4px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.admin-edited { color: var(--saffron); }
+
+.admin-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--shell); border: 1px solid var(--hair); }
+.admin-seg button {
+  white-space: nowrap; height: 34px; padding: 0 12px; border-radius: 999px; border: 0; background: transparent;
+  font-size: 0.85rem; font-weight: 500; color: var(--ink-2);
+  transition: background-color 0.4s var(--spring), color 0.4s var(--spring);
+}
+.admin-seg button:hover { color: var(--ink); }
+.admin-seg button[aria-checked="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 3px rgba(26, 26, 34, 0.14); }
+.admin-seg button[data-status="soldout"][aria-checked="true"] { color: var(--danger); }
+
+.admin-fields { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.admin-fields .admin-field:first-child { grid-column: 1 / -1; }
+@media (max-width: 479px) {
+  .admin-item { grid-template-columns: 64px minmax(0, 1fr); }
+  .admin-item-body { grid-column: 1 / -1; }
+  .admin-item-media { grid-row: 1; }
+  .admin-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-fields .admin-field:last-child { grid-column: 1 / -1; }
+}
+.admin-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.admin-item-body > .admin-field { margin-top: 12px; }
+.admin-field > span { font-size: 0.8rem; font-weight: 500; color: var(--ink-2); }
+.admin-field.is-edited > span::after { content: " · edited"; color: var(--saffron); }
+.admin-field input, .admin-field textarea {
+  width: 100%; height: 44px; padding: 0 12px; border-radius: var(--r-sm);
+  border: 1px solid var(--hair-strong); background: var(--ground);
+  transition: border-color 0.4s var(--spring), box-shadow 0.4s var(--spring);
+}
+.admin-field textarea { height: auto; padding: 10px 12px; resize: vertical; line-height: 1.45; }
+.admin-field input:focus, .admin-field textarea:focus { outline: 0; border-color: var(--saffron); box-shadow: 0 0 0 3px rgba(232, 150, 30, 0.25); }
+.admin-field input[type="number"] { font-variant-numeric: tabular-nums; }
+.admin-item-foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 0.875rem; }
+.admin-orig { margin-right: auto; color: var(--ink-2); }
+
+/* Orders ------------------------------------------------------------------ */
+
+.admin-orders { display: grid; gap: 16px; }
+.admin-order { padding: 20px; border-radius: var(--r-lg); background: var(--paper); border: 1px solid var(--hair); }
+.admin-order.is-new { border-color: var(--saffron); }
+.admin-order.is-cancelled, .admin-order.is-delivered { opacity: 0.75; }
+.admin-order-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.admin-order-head h3 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.admin-order-when { display: block; margin-top: 6px; font-size: 0.85rem; color: var(--ink-2); }
+.admin-order-body { display: grid; gap: 16px; }
+@media (min-width: 760px) { .admin-order-body { grid-template-columns: 1fr 1fr; gap: 32px; } }
+.admin-order-cust { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.admin-order-cust > span { color: var(--ink-2); }
+.admin-order-note { font-style: italic; }
+.admin-order-lines .row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-variant-numeric: tabular-nums; }
+.admin-order-lines .row.total { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--hair); font-weight: 700; }
+
+/* The toast sits under the bar here, not under the storefront island. */
+body.admin .toast { top: 84px; }
+@media (max-width: 719px) { body.admin .toast { top: 116px; max-width: calc(100% - 32px); } }

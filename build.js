@@ -115,6 +115,7 @@ function page({ base, url, title, description, image, imageAlt, jsonLd, body, bo
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <link rel="stylesheet" href="${base}vendor/lenis/lenis.css" />
   <link rel="stylesheet" href="${base}styles.css" />
 ${jsonLd.map(ldScript).join("\n")}
 </head>
@@ -132,6 +133,9 @@ ${reRoot(CHROME_FOOT, base)}
   </div>
 
   <script src="${base}products.js"></script>
+  <script src="${base}store-settings.js"></script>
+  <script src="${base}vendor/lenis/lenis.min.js"></script>
+  <script src="${base}smooth-scroll.js"></script>
   <script src="${base}page.js"></script>
 </body>
 </html>
