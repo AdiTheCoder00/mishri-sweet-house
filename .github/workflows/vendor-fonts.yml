@@ -1,0 +1,42 @@
+# Downloads the Fontshare fonts into vendor/fonts/ and commits them to the
+# branch. Fontshare can't be reached from every dev machine, so this runs
+# tools/fetch-fonts.mjs on GitHub's runner instead. Run it from the Actions
+# tab ("Run workflow") to refresh the fonts; on pull requests it only runs
+# when vendor/fonts/ is missing.
+name: Vendor fonts
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: [tools/fetch-fonts.mjs, .github/workflows/vendor-fonts.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  fonts:
+    # Pushing back only works for branches in this repository.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download fonts
+        if: github.event_name == 'workflow_dispatch' || hashFiles('vendor/fonts/fonts.css') == ''
+        run: node tools/fetch-fonts.mjs
+
+      - name: Commit
+        run: |
+          git add vendor/fonts
+          if git diff --cached --quiet; then echo "fonts unchanged"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Vendor Clash Display and Satoshi from Fontshare"
+          git push
