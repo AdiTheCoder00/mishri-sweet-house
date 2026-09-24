@@ -40,7 +40,7 @@
   const ribbonText = $("#ribbon-text");
   if (ribbonText) {
     const NOTICES = [
-      { long: "Same-day delivery in Jaipur · Next-day to 40 cities", short: "Same-day delivery in Jaipur" },
+      { long: "Same-day delivery in Jaipur · 2 to 5 days anywhere in India", short: "Delivering across India" },
       { long: "Free delivery on orders over ₹999", short: "Free delivery over ₹999" },
       { long: "Festival boxes open for pre-order soon · Join the list", short: "Festival boxes: join the list" },
     ];

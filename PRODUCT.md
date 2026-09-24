@@ -18,20 +18,20 @@ Secondary (confirmed as present, not the lead): locals in Jaipur ordering same-d
 
 ## Product Purpose
 
-Mishri Sweet House is an online storefront for a Jaipur mithai shop. It sells twelve classic sweets and three curated gift boxes, delivered same-day in Jaipur and next-day (cold-packed where needed) to about 40 cities. Success: a gift-giver completes an order within a couple of minutes, believing the box will arrive fresh and the card will be handwritten.
+Mishri Sweet House is an online storefront for a Jaipur mithai shop. It sells twelve classic sweets and three curated gift boxes, delivered same-day in Jaipur and in 2 to 5 days (cold-packed where needed) anywhere else in India. Success: a gift-giver completes an order within a couple of minutes, believing the box will arrive fresh and the card will be handwritten.
 
 This is a demo store. No payment is processed and no order is transmitted; the UI states this on the success screen and in the footer.
 
 ## Positioning
 
-Lead claim: "Mithai made this morning, at your door by evening." Daily 5 am production, nothing sold older than a day, same-day in Jaipur, cold-packed next-day to 40 cities. (User expressed no preference among the three candidate claims; this one was already the hero and is kept as lead.)
+Lead claim: "Mithai made this morning, at your door by evening." Daily 5 am production, nothing sold older than a day, same-day in Jaipur, cold-packed in 2 to 5 days anywhere in India. (User expressed no preference among the three candidate claims; this one was already the hero and is kept as lead.)
 
 Supporting proof: three generations and one kadhai (two-table shop near Johari Bazaar since 1962, unchanged recipes, same dairy, khoya reduced by hand); pure desi ghee, whole milk, no artificial colour, five-kilo batches.
 
 ## Operating Context
 
 - Ordering happens mostly on phones; festival peaks (Diwali, Holi, Rakhi) with pre-order boxes.
-- Delivery: same-day for Jaipur PINs (302xxx, 303xxx); next-day to a demo list of ~40 city PIN prefixes; chilled items (Rasmalai) ship in insulated boxes with ice packs.
+- Delivery: anywhere in India. Same-day for Jaipur PINs (302xxx, 303xxx); 2 to 5 days everywhere else; chilled items (Rasmalai) ship in insulated boxes with ice packs.
 - Payment methods offered in the demo: UPI (payment request to a UPI ID), card (redirect to a secure page, not on-site), pay on delivery.
 - Gift boxes carry a handwritten card message written at checkout.
 

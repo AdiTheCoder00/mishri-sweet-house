@@ -26,7 +26,8 @@ export async function buildOrder(input) {
   if (!/^[6-9]\d{9}$/.test(normalisePhone(customer.phone))) return { error: "Enter a 10 digit mobile number.", field: "phone" };
   if (customer.address.length < 6) return { error: "Enter the full delivery address.", field: "address" };
   if (customer.city.length < 2) return { error: "Enter the city.", field: "city" };
-  if (!/^\d{6}$/.test(customer.pin)) return { error: "Enter a 6 digit PIN code.", field: "pin" };
+  // Anywhere in India: 6 digits, never starting with 0.
+  if (!/^[1-9]\d{5}$/.test(customer.pin)) return { error: "Enter a valid 6 digit PIN code.", field: "pin" };
 
   const method = METHODS.includes(body.method) ? body.method : "";
   if (!method) return { error: "Choose how you want to pay." };
