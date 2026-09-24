@@ -32,13 +32,16 @@ export async function PATCH(request) {
     if (!order) return json({ error: "Order not found." }, 404);
     order.status = body.status;
     order.updatedAt = new Date().toISOString();
+    // For the customer's Track your order timeline.
+    if (!Array.isArray(order.history)) order.history = [];
+    order.history.push({ status: order.status, at: order.updatedAt });
     let emailed = false;
     if (order.status === "dispatched" && !(order.notified && order.notified.dispatched)) {
       // Claim the notice atomically so two admins dispatching together send
       // one email; release the claim if sending fails so a retry can send it.
       const claim = `mishri:notified:dispatch:${order.no}`;
       if (await redis("SET", claim, order.updatedAt, "NX")) {
-        emailed = (await sendDispatchNotice(order)).sent;
+        emailed = (await sendDispatchNotice(order, new URL(request.url).origin)).sent;
         if (emailed) order.notified = { ...order.notified, dispatched: order.updatedAt };
         else await redis("DEL", claim);
       }

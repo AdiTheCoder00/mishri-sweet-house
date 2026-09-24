@@ -155,6 +155,8 @@ export async function sendTestEmail(siteUrl) {
   });
 }
 
+const trackUrl = (siteUrl, no) => `${siteUrl}/track/?no=${encodeURIComponent(no)}`;
+
 /* ---------------- to the customer ----------------
    Only with a verified sender (EMAIL_FROM); the test sender can't reach them. */
 
@@ -171,7 +173,7 @@ export async function sendOrderConfirmation(order, siteUrl) {
     `It reaches ${c.city} ${eta(c.pin)}. Delivering to: ${c.address}, ${c.city} ${c.pin}.`,
     order.note ? `Your card will read: “${order.note}”` : "",
     "", "Questions? WhatsApp us on +91 87446 67777.",
-    siteUrl ? siteUrl : "",
+    siteUrl ? `Track it: ${trackUrl(siteUrl, order.no)}` : "",
   ].filter((l, i, a) => l !== "" || a[i - 1] !== "").join("\n");
   const html = wrap(`
     <h2 style="margin:0 0 4px">Thank you, ${esc(first)}</h2>
@@ -180,11 +182,12 @@ export async function sendOrderConfirmation(order, siteUrl) {
     <p style="margin:0 0 8px">${esc(payLine)}</p>
     <p style="margin:0 0 8px">It reaches ${esc(c.city)} <strong>${esc(eta(c.pin))}</strong>. Delivering to ${esc(c.address)}, ${esc(c.city)} ${esc(c.pin)}.</p>
     ${order.note ? `<p style="margin:0 0 8px">Your card will read: “${esc(order.note)}”</p>` : ""}
+    ${siteUrl ? `<p style="margin:16px 0 0"><a href="${esc(trackUrl(siteUrl, order.no))}">Track your order</a></p>` : ""}
     <p style="margin:16px 0 0;color:#5d5e69">Questions? <a href="https://wa.me/918744667777">WhatsApp us on +91 87446 67777</a>.</p>`);
   return sendEmail({ to: c.email, subject: `Your order ${order.no} from ${SHOP}`, text, html, context: `confirmation ${order.no}` });
 }
 
-export async function sendDispatchNotice(order) {
+export async function sendDispatchNotice(order, siteUrl) {
   const c = order.customer;
   if (!c.email || !emailConfig().customerEmails) return { sent: false, reason: "not-configured" };
   const first = c.name.split(" ")[0];
@@ -193,11 +196,13 @@ export async function sendDispatchNotice(order) {
     `Good news, ${first}: order ${order.no} is out for delivery to ${c.address}, ${c.city} ${c.pin}.`,
     due ? `Please keep ${inr(order.total)} ready for the rider (cash or UPI).` : "",
     "The rider will call on the way. Questions? WhatsApp us on +91 87446 67777.",
+    siteUrl ? `Track it: ${trackUrl(siteUrl, order.no)}` : "",
   ].filter(Boolean).join("\n\n");
   const html = wrap(`
     <h2 style="margin:0 0 8px">Your order is on its way</h2>
     <p style="margin:0 0 8px">Good news, ${esc(first)}: order ${esc(order.no)} is out for delivery to ${esc(c.address)}, ${esc(c.city)} ${esc(c.pin)}.</p>
     ${due ? `<p style="margin:0 0 8px">Please keep <strong>${esc(inr(order.total))}</strong> ready for the rider (cash or UPI).</p>` : ""}
+    ${siteUrl ? `<p style="margin:0 0 8px"><a href="${esc(trackUrl(siteUrl, order.no))}">Track your order</a></p>` : ""}
     <p style="margin:0;color:#5d5e69">The rider will call on the way. Questions? <a href="https://wa.me/918744667777">WhatsApp us on +91 87446 67777</a>.</p>`);
   return sendEmail({ to: c.email, subject: `Order ${order.no} is out for delivery`, text, html, context: `dispatch ${order.no}` });
 }

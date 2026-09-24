@@ -1,0 +1,43 @@
+# Runs every test on each pull request and on pushes to main.
+# The site has no package.json, so test tools are installed outside the
+# repo and found through PLAYWRIGHT_MODULE and EDGE_RUNTIME_MODULE.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TOOLS: ${{ github.workspace }}/../tools
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install test tools
+        run: |
+          mkdir -p "$TOOLS"
+          npm install --prefix "$TOOLS" --no-audit --no-fund playwright edge-runtime vercel
+          "$TOOLS/node_modules/.bin/playwright" install --with-deps chromium
+          echo "PLAYWRIGHT_MODULE=$(cd "$TOOLS" && pwd)/node_modules/playwright" >> "$GITHUB_ENV"
+          echo "EDGE_RUNTIME_MODULE=$(cd "$TOOLS" && pwd)/node_modules/edge-runtime" >> "$GITHUB_ENV"
+
+      # Builds exactly as Vercel does, without deploying or needing an account.
+      - name: Vercel build
+        run: |
+          mkdir -p .vercel
+          echo '{"projectId":"prj_ci","orgId":"team_ci","settings":{"framework":null}}' > .vercel/project.json
+          "$TOOLS/node_modules/.bin/vercel" build --yes
+
+      - name: Tests
+        run: node --test tests/*.test.mjs

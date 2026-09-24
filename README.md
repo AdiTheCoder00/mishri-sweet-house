@@ -26,6 +26,8 @@ The signature interaction: a jaali screen sits over each sweet and opens when yo
 - Wishlist drawer with "Move all to basket"
 - Checkout: validated form, delivery estimate by PIN (same-day in Jaipur, 2 to 5 days anywhere else in India), three real payment methods whose CTA names the consequence ("Pay ₹1,078 by UPI"), a cold-chain note when the basket holds a chilled item, and a receipt-style confirmation
 - Light and dark themes (follows the system, toggle in the nav, remembered), full keyboard support, `prefers-reduced-motion` respected
+- **Track your order** (`track/`): customers enter their order number and mobile number and see where the order has got to, with the time of each step. Linked from the receipt, the confirmation and dispatch emails, and the footer
+- Policy pages: shipping, refunds and cancellations, privacy, terms, and contact, linked from the footer
 - Smooth wheel scrolling with Lenis. Touch scrolling stays native, and it switches off under `prefers-reduced-motion`
 
 Cart, wishlist and theme persist in `localStorage`. Nothing is charged and no order is sent.
@@ -46,6 +48,9 @@ Cart, wishlist and theme persist in `localStorage`. Nothing is charged and no or
 | `store-settings.js` | Applies the admin's catalogue edits on top of `products.js` in the storefront |
 | `smooth-scroll.js` | Lenis smooth scrolling: eased wheel scrolling, section links that glide clear of the header, paused behind drawers and dialogs |
 | `vendor/lenis/` | [Lenis](https://github.com/darkroomengineering/lenis) 1.3.26 (MIT), vendored so the site still needs no build step or extra CDN |
+| `policies.js` | Text of the policy pages; `build.js` renders it into `policies/<slug>/` |
+| `track.js` | The Track your order page |
+| `tests/` | Automated tests; see [Tests](#tests) |
 | `DESIGN.md` / `PRODUCT.md` | Visual system and product truth |
 
 ## Shop admin
@@ -138,6 +143,7 @@ Without Razorpay keys, live mode offers **cash on delivery only**, so no order e
 | `api/orders.js` | `POST /api/orders`: validates and prices an order, saves it, emails cash-on-delivery orders, and opens a Razorpay order for online ones. Limited to 20 orders an hour per address |
 | `api/payments/verify.js`, `api/payments/webhook.js` | Confirm Razorpay payments (browser report and Razorpay webhook), each checked by signature |
 | `api/admin/orders.js`, `api/admin/catalogue.js`, `api/admin/email.js` | The admin's data, email status, test email and list sending. They need the sign-in cookie |
+| `api/track.js` | `POST /api/track`: an order's progress for the Track your order page. Needs the order number and the mobile number it was placed with; shows items, total and status, never the name, address or phone. Limited to 30 lookups an hour per address |
 | `api/subscribe.js`, `api/unsubscribe.js` | The "Notify me" list: sign-up (with a welcome email) and unsubscribe |
 | `api/_lib/` | Shared helpers: Upstash REST client, pricing, order storage, subscribers, Resend email (with plain-English error explanations), Razorpay |
 | `middleware.js` | Admin sign-in and lockout (edge runtime, one self-contained file) |
@@ -159,12 +165,16 @@ Generates one indexable page per sweet, per gift box and per category, then rewr
 | `sweets/<slug>/` | 12 | `sweets/kaju-katli/` |
 | `gifts/<slug>/` | 3 | `gifts/the-diwali-box/` |
 | `mithai/<category>/` | 5 | `mithai/barfi/` |
+| `policies/<slug>/` | 5 | `policies/refunds/` |
+| `track/` | 1 | Track your order (kept out of search results and the sitemap) |
 
 Each page carries its own title, meta description (clipped to 158 chars), canonical, Open Graph and Twitter tags, plus `Product` and `BreadcrumbList` structured data. Category pages carry `ItemList`.
 
 The generator reads `products.js` for the catalogue and lifts the ribbon, nav and footer straight out of `index.html`, so the generated pages cannot drift from the real header or the real prices. **Re-run it after editing `products.js` or the site chrome.**
 
-`sweets/`, `gifts/` and `mithai/` are disposable build output. Delete and regenerate freely.
+Policy text lives in `policies.js`; re-run the build after editing it too. The tests fail if a generated page is out of date.
+
+`sweets/`, `gifts/`, `mithai/`, `policies/` and `track/` are disposable build output. Delete and regenerate freely.
 
 ### The per-product copy
 
@@ -176,6 +186,52 @@ Each product carries a `story` field in `products.js` (131–172 words, ~2,250 i
 ```
 
 **This copy is written demo content and should be replaced with the shop's own words.** It was written to stay inside what the rest of the site already commits to — desi ghee, whole milk, no artificial colour, the Sanganer dairy, five kilo batches, the delivery promise — and the preparation described for each sweet is how that sweet is generally made, not a claim about a specific kitchen. It invents no awards, certifications, suppliers, health claims or nutrition figures. Anything a real shop would want to say beyond that (who supplies the cashews, which family recipe, what changed in 1998) has to come from the shop.
+
+## Policies
+
+The shipping, refunds, privacy, terms and contact pages are written from what the site already promises (delivery times and fees, payment methods, free replacement, the services it runs on). A few terms the site never stated before had to be chosen. **Confirm these match how the shop really works** before taking real orders, and edit `policies.js` if not:
+
+- Damaged, spoilt or late orders must be reported on WhatsApp **within 24 hours** of delivery
+- Orders can be cancelled free **until preparation starts**; bulk and wedding orders are agreed case by case
+- Online refunds go back to the same account or card **within 5 to 7 working days** of approval; cash-on-delivery refunds are paid **by UPI or bank transfer**
+- Perishable orders that arrived in good condition **can't be returned**
+- The kitchen handles **milk, nuts (cashew, pistachio, almond), gram flour, wheat and sugar**
+- Disputes go to the **courts in Jaipur**
+- Order records are kept for **accounts and tax purposes**
+- Consider adding a **contact email** and, if the shop has one, its **GSTIN** to the contact page. Razorpay asks for these policy pages when you activate the account
+
+Change `UPDATED` in `policies.js` whenever the wording changes.
+
+## Tests
+
+```bash
+node --test tests/*.test.mjs
+```
+
+Needs nothing installed. The tests run the real `api/` routes and `middleware.js` with Upstash, Resend and Razorpay replaced by in-memory stand-ins (`tests/helpers/`), so no keys or network are needed and nothing is sent.
+
+| File | Covers |
+| --- | --- |
+| `orders.test.mjs` | Demo vs live mode, server-side pricing, validation, admin sign-in, status changes, catalogue edits, rate limits |
+| `payments.test.mjs` | Razorpay orders, signature checks, the webhook, and alerting exactly once |
+| `email.test.mjs` | Owner alerts, customer confirmation and dispatch emails, Resend errors explained, the Notify me list, announcements, unsubscribe |
+| `regressions.test.mjs` | Races and edge cases found in code review: double dispatch emails, double sign-ups, retrying a half-sent announcement |
+| `track.test.mjs` | Track your order: matching by number and mobile, what it reveals, rate limit |
+| `middleware.test.mjs` | Admin sign-in, cookies, lockout, and that the file stays self-contained for the edge runtime |
+| `build.test.mjs` | Generated pages are up to date, and no internal link is broken |
+| `e2e.test.mjs` | In Chromium: the demo shop, policy pages, phone widths, and a live order followed through Track your order |
+| `vercel-output.test.mjs` | The output of `vercel build`: functions as Vercel compiles them, the middleware inside Vercel's edge runtime |
+
+The last two are skipped unless their tools are present. To run them too:
+
+```bash
+npm install --no-save playwright edge-runtime vercel
+npx playwright install chromium
+npx vercel build --yes   # first time: asks to link a project; any will do, nothing is deployed
+node --test tests/*.test.mjs
+```
+
+GitHub Actions (`.github/workflows/test.yml`) runs everything, including `vercel build`, on every pull request and on pushes to `main`.
 
 ## SEO
 

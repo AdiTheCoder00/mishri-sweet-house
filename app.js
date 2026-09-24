@@ -782,7 +782,7 @@
   }
 
   // Shows the receipt and empties the basket. lines: [{ name, qty, amount }].
-  function showOrderPlaced({ no, method, total, lines, note, city, pin, title, payLine, fine }) {
+  function showOrderPlaced({ no, method, total, lines, note, city, pin, title, payLine, fine, track }) {
     const name = $("#co-name").value.trim().split(" ")[0];
     $("#order-success-title").textContent = title;
     $("#order-success-text").textContent = `Thanks, ${name}. Order ${no} reaches ${city} ${etaText(pin)}. ${payLine}`;
@@ -791,7 +791,8 @@
       <div class="row total"><span>${method === "cod" ? "Due on delivery" : "Total"}</span><span>${inr(total)}</span></div>
       ${hasChilled() ? `<div class="row muted"><span>Packed cold with ice packs</span><i class="ph-light ph-snowflake" aria-hidden="true"></i></div>` : ""}
       ${note ? `<div class="note">Card reads: “${escapeHtml(note)}”</div>` : ""}
-      ${fine ? `<div class="muted">${escapeHtml(fine)}</div>` : ""}`;
+      ${fine ? `<div class="muted">${escapeHtml(fine)}</div>` : ""}
+      ${track ? `<a class="receipt-track" href="track/?no=${encodeURIComponent(no)}"><i class="ph-light ph-map-pin" aria-hidden="true"></i> Track this order</a>` : ""}`;
 
     if (account) { account.orders = (account.orders || 0) + 1; saveAccount(); }
     checkoutForm.hidden = true;
@@ -920,6 +921,7 @@
       payLine: (paid ? `We have your payment of ${inr(order.total)} and start packing now.` : `Pay ${inr(order.total)} in cash or by UPI when the box reaches you.`)
         + (order.customer.email && STORE.emails ? ` A confirmation is on its way to ${order.customer.email}.` : ""),
       fine: "",
+      track: true,
     });
   }
 

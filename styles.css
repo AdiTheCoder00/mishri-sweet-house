@@ -1041,7 +1041,47 @@ body.no-scroll { overflow: hidden; }
 
 /* Generated pages: product detail and category listing ------------------- */
 
-.page-pdp main, .page-plp main { padding-top: calc(var(--ribbon-h) + var(--island-h) + 40px); }
+.page-pdp main, .page-plp main, .page-doc main { padding-top: calc(var(--ribbon-h) + var(--island-h) + 40px); }
+
+/* Policy pages and Track your order: one readable column. */
+.doc { padding-bottom: 96px; }
+.doc-wrap { max-width: 760px; }
+.doc-head { margin-bottom: 40px; }
+.doc-head h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); margin-bottom: 12px; }
+.doc-updated { margin-top: 10px; font-size: 0.875rem; color: var(--ink-2); }
+.doc-section { padding: 28px 0; border-top: 1px solid var(--hair); }
+.doc-section h2 { font-size: clamp(1.25rem, 2.6vw, 1.5rem); margin-bottom: 12px; }
+.doc-section p, .doc-section li { color: var(--ink-2); font-size: 1.02rem; line-height: 1.7; max-width: 64ch; }
+.doc-section p + p, .doc-section ul + p, .doc-section p + ul { margin-top: 12px; }
+.doc-section ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.doc a:not(.btn) { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair-strong); }
+.doc a:not(.btn):hover { text-decoration-color: currentColor; }
+.doc-more { margin-top: 24px; padding-top: 28px; border-top: 1px solid var(--hair); }
+.doc-more h2 { font-size: 1.1rem; margin-bottom: 10px; }
+.doc-more ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.doc-more a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Track your order */
+.track-form { padding: 28px 0; border-top: 1px solid var(--hair); }
+.track-form input { width: 100%; }
+.track-form .field-error { margin: -4px 0 16px; }
+.track-result { padding: 28px 0; border-top: 1px solid var(--hair); display: grid; gap: 24px; }
+.track-head h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); margin-bottom: 6px; }
+.track-head p { color: var(--ink-2); line-height: 1.6; }
+.track-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.track-step { position: relative; display: flex; align-items: flex-start; gap: 14px; padding-bottom: 22px; }
+.track-step:last-child { padding-bottom: 0; }
+.track-step:not(:last-child)::before { content: ""; position: absolute; left: 19px; top: 40px; bottom: 2px; width: 2px; background: var(--hair); }
+.track-step.is-done:not(:last-child)::before { background: var(--pista-ink); }
+.track-dot { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--shell); color: var(--ink-2); font-size: 18px; }
+.track-step.is-done .track-dot { background: var(--pista-ink); color: var(--paper); }
+.track-step.is-current .track-dot { background: var(--saffron); color: var(--on-saffron); }
+.track-label { display: grid; gap: 2px; padding-top: 9px; font-weight: 500; }
+.track-step.is-todo .track-label { color: var(--ink-2); font-weight: 400; }
+.track-when { font-size: 0.85rem; font-weight: 400; color: var(--ink-2); }
+.track-result .receipt { margin-top: 0; }
+.track-help { padding-top: 24px; border-top: 1px solid var(--hair); color: var(--ink-2); font-size: 0.95rem; line-height: 1.6; }
+.receipt-track { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 500; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair-strong); }
 
 .crumbs { margin-bottom: 32px; font-size: 0.875rem; color: var(--ink-2); }
 .crumbs ol { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
