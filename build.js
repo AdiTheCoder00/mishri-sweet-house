@@ -31,9 +31,10 @@ new Function(
   "exports",
   fs.readFileSync("products.js", "utf8") +
     "\nexports.PRODUCTS = PRODUCTS; exports.GIFT_BOXES = GIFT_BOXES;" +
-    "\nexports.SERVES = typeof SERVES === 'undefined' ? {} : SERVES;"
+    "\nexports.SERVES = typeof SERVES === 'undefined' ? {} : SERVES;" +
+    "\nexports.DELIVERY = DELIVERY;"
 )(sandbox);
-const { PRODUCTS, GIFT_BOXES, SERVES } = sandbox;
+const { PRODUCTS, GIFT_BOXES, SERVES, DELIVERY } = sandbox;
 
 /* ---------------- shared chrome, lifted from index.html ---------------- */
 
@@ -51,7 +52,7 @@ const CHROME_FOOT = between('<footer class="footer">', "<!-- Basket drawer -->")
 const reRoot = (html, base) =>
   html
     .replace(/(href|src)="(?!https?:|#|mailto:|tel:|\/\/)([^"]+)"/g, (_, a, v) => `${a}="${base}${v}"`)
-    .replace(/href="#([a-z-]+)"/g, (_, id) => `href="${base}index.html#${id}"`);
+    .replace(/href="#([a-z-]+)"/g, (_, id) => `href="${base}#${id}"`);
 
 /* ---------------- helpers ---------------- */
 
@@ -78,12 +79,69 @@ const CATEGORY_NOTE = {
   Ghee: "Slow-cooked in desi ghee. Rich, and they keep well.",
 };
 
+// Social cards: WhatsApp, Facebook and LinkedIn previews are most reliable
+// with JPEG, so point them at the .jpg twin of each .webp.
+const jpgOf = (img) => {
+  const jpg = img.replace(/\.webp$/, ".jpg");
+  return fs.existsSync(jpg) ? jpg : img;
+};
+
+// Pixel size of a JPEG, read from its SOF header, for og:image:width/height.
+function jpegSize(file) {
+  if (!fs.existsSync(file)) return null;
+  const b = fs.readFileSync(file);
+  for (let i = 2; i + 9 < b.length; ) {
+    const marker = b[i + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker))
+      return { width: b.readUInt16BE(i + 7), height: b.readUInt16BE(i + 5) };
+    i += 2 + b.readUInt16BE(i + 2);
+  }
+  return null;
+}
+
 const ldScript = (obj) =>
   `  <script type="application/ld+json">\n${JSON.stringify(obj, null, 2).replace(/</g, "\\u003c")}\n  </script>`;
 
+// Meta descriptions: the longest candidate that fits whole, so a search
+// snippet never ends mid-sentence on an ellipsis.
+// If none fits, the last is clipped at a word boundary as a backstop.
+const fit = (candidates, max = 160) => {
+  const found = candidates.find((c) => c.length <= max);
+  if (found) return found;
+  const last = candidates[candidates.length - 1];
+  return last.slice(0, last.lastIndexOf(" ", max - 1)).replace(/[,.;:]$/, "") + "…";
+};
+
+// Delivery as Google's merchant listings read it: anywhere in India, same-day
+// to 5 days, free when the smallest possible order clears the free line.
+function shippingLd(p) {
+  const smallestOrder = p.price * (p.minQty || 1);
+  return {
+    "@type": "OfferShippingDetails",
+    shippingRate: {
+      "@type": "MonetaryAmount",
+      value: String(smallestOrder >= DELIVERY.freeOver ? 0 : DELIVERY.fee),
+      currency: "INR",
+    },
+    shippingDestination: { "@type": "DefinedRegion", addressCountry: "IN" },
+    deliveryTime: {
+      "@type": "ShippingDeliveryTime",
+      handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+      transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 5, unitCode: "DAY" },
+    },
+  };
+}
+
 /* ---------------- page shell ---------------- */
 
-function page({ base, url, title, description, image, imageAlt, jsonLd, body, bodyClass = "", scripts = [], robots = "index, follow, max-image-preview:large" }) {
+function page({ base, url, title, description, img, imageAlt, jsonLd, body, bodyClass = "", ogType = "website", extraMeta = [], scripts = [], robots = "index, follow, max-image-preview:large" }) {
+  const social = jpgOf(img);
+  const image = `${SITE}/${social}`;
+  const size = social.endsWith(".jpg") ? jpegSize(social) : null;
+  const meta = [
+    ...(size ? [["og:image:width", size.width], ["og:image:height", size.height]] : []),
+    ...extraMeta,
+  ];
   return `<!DOCTYPE html>
 <html lang="en-IN">
 <head>
@@ -96,15 +154,16 @@ function page({ base, url, title, description, image, imageAlt, jsonLd, body, bo
   <meta name="theme-color" content="#b4455b" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#101014" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="${base}favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="${base}favicon.svg" />
 
-  <meta property="og:type" content="website" />
+  <meta property="og:type" content="${ogType}" />
   <meta property="og:site_name" content="${BRAND}" />
   <meta property="og:title" content="${esc(title)}" />
   <meta property="og:description" content="${esc(description)}" />
   <meta property="og:url" content="${url}" />
   <meta property="og:image" content="${image}" />
   <meta property="og:image:alt" content="${esc(imageAlt)}" />
-  <meta property="og:locale" content="en_IN" />
+${meta.map(([k, v]) => `  <meta property="${k}" content="${esc(v)}" />\n`).join("")}  <meta property="og:locale" content="en_IN" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${esc(title)}" />
   <meta name="twitter:description" content="${esc(description)}" />
@@ -154,7 +213,7 @@ const crumbs = (items, base) => `
         <ol>
 ${items
   .map((c, i) =>
-    c.href
+    c.href !== undefined
       ? `          <li><a href="${base}${c.href}">${esc(c.name)}</a></li>`
       : `          <li aria-current="page">${esc(c.name)}</li>`
   )
@@ -177,9 +236,7 @@ const breadcrumbLd = (items) => ({
 
 function productPage(p, kind) {
   const base = "../../";
-  const dir = kind === "box" ? "gifts" : "sweets";
-  const url = `${SITE}/${dir}/${slug(p.name)}/`;
-  const image = `${SITE}/${p.img}`;
+  const url = `${SITE}/${p.page}`;
   const serves = SERVES[p.weight];
   const storage = kind === "box" ? null : STORAGE[p.category];
 
@@ -188,16 +245,17 @@ function productPage(p, kind) {
     .slice(0, 3);
 
   const title = `${p.name} · ${p.weight} · ${BRAND}`;
-  const clip = (s, n) => (s.length <= n ? s : s.slice(0, s.lastIndexOf(" ", n - 1)).replace(/[,.]$/, "") + "…");
-  const description = clip(
+  const description = fit([
     `${p.desc} ${inr(p.price)} for ${p.weight}${serves ? ", " + serves : ""}. Fresh from our Jaipur kitchen.`,
-    158
-  );
+    `${p.desc} ${inr(p.price)} for ${p.weight}${serves ? ", " + serves : ""}.`,
+    `${p.desc} ${inr(p.price)} for ${p.weight}.`,
+    p.desc,
+  ]);
 
   const trail = [
-    { name: "Home", href: "index.html" },
+    { name: "Home", href: "" },
     kind === "box"
-      ? { name: "Gift boxes", href: "index.html#gifts" }
+      ? { name: "Gift boxes", href: "#gifts" }
       : { name: p.category, href: `mithai/${slug(p.category)}/` },
     { name: p.name },
   ];
@@ -207,7 +265,8 @@ function productPage(p, kind) {
     "@type": "Product",
     name: p.name,
     description: p.desc,
-    image,
+    image: [...new Set([`${SITE}/${jpgOf(p.img)}`, `${SITE}/${p.img}`])],
+    url,
     sku: p.id,
     category: kind === "box" ? "Gift box" : p.category,
     brand: { "@type": "Brand", name: BRAND },
@@ -218,7 +277,8 @@ function productPage(p, kind) {
       priceCurrency: "INR",
       availability: "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
-      seller: { "@type": "Organization", name: BRAND },
+      seller: { "@type": "Organization", name: BRAND, url: SITE + "/" },
+      shippingDetails: shippingLd(p),
     },
   };
 
@@ -228,7 +288,7 @@ function productPage(p, kind) {
 ${crumbs(trail, base)}
         <div class="pdp-grid">
           <figure class="pdp-media">
-            <img src="${base}${p.img}" alt="${esc(p.name)}" width="800" height="800" fetchpriority="high" />
+            <img src="${base}${p.img}" alt="${esc(p.name)}: ${esc(p.desc.split(". ")[0].replace(/\.$/, ""))}" width="800" height="800" fetchpriority="high" />
           </figure>
 
           <div class="pdp-copy">
@@ -243,7 +303,7 @@ ${crumbs(trail, base)}
               <button class="btn btn-primary" data-add="${esc(p.id)}">
                 Add to basket <span class="btn-ico"><i class="ph-light ph-plus" aria-hidden="true"></i></span>
               </button>
-              <a class="btn btn-ghost" href="${base}index.html#shop">Back to the counter</a>
+              <a class="btn btn-ghost" href="${base}#shop">Back to the counter</a>
             </div>
 
             <dl class="pdp-facts">
@@ -270,7 +330,7 @@ ${crumbs(trail, base)}
           <ul>
 ${related
   .map(
-    (r) => `            <li><a href="${base}${r.id && GIFT_BOXES.includes(r) ? "gifts" : "sweets"}/${slug(r.name)}/">
+    (r) => `            <li><a href="${base}${r.page}">
               <img src="${base}${r.img}" alt="" width="200" height="200" loading="lazy" />
               <span>${esc(r.name)}</span><span class="rel-price">${inr(r.price)}</span>
             </a></li>`
@@ -284,18 +344,26 @@ ${related
     </section>`;
 
   return {
-    file: path.join(dir, slug(p.name), "index.html"),
+    file: path.join(p.page, "index.html"),
     url,
+    img: p.img,
+    name: p.name,
     html: page({
       base,
       url,
       title,
       description,
-      image,
+      img: p.img,
       imageAlt: p.name,
       jsonLd: [productLd, breadcrumbLd(trail)],
       body,
       bodyClass: "page-pdp",
+      ogType: "product",
+      extraMeta: [
+        ["product:price:amount", String(p.price)],
+        ["product:price:currency", "INR"],
+        ["product:availability", "in stock"],
+      ],
     }),
   };
 }
@@ -308,13 +376,14 @@ function categoryPage(cat) {
   const items = PRODUCTS.filter((p) => p.category === cat);
   const note = CATEGORY_NOTE[cat] || "";
   const title = `${cat} · Fresh ${cat} Sweets from Jaipur · ${BRAND}`;
-  const clipC = (s, n) => (s.length <= n ? s : s.slice(0, s.lastIndexOf(" ", n - 1)).replace(/[,.]$/, "") + "…");
-  const description = clipC(
-    `${note} ${items.length} ${cat.toLowerCase()} sweets made fresh each morning in Jaipur: ${items.map((i) => i.name).join(", ")}.`,
-    158
-  );
+  const names = items.map((i) => i.name).join(", ");
+  const description = fit([
+    `${note} ${items.length} ${cat.toLowerCase()} sweets made fresh each morning in Jaipur and delivered across India: ${names}.`,
+    `${note} ${items.length} ${cat.toLowerCase()} sweets made fresh each morning in Jaipur: ${names}.`,
+    `Fresh ${cat.toLowerCase()} sweets from Jaipur: ${names}.`,
+  ]);
 
-  const trail = [{ name: "Home", href: "index.html" }, { name: cat }];
+  const trail = [{ name: "Home", href: "" }, { name: cat }];
 
   const listLd = {
     "@context": "https://schema.org",
@@ -324,7 +393,7 @@ function categoryPage(cat) {
     itemListElement: items.map((p, i) => ({
       "@type": "ListItem",
       position: i + 1,
-      url: `${SITE}/sweets/${slug(p.name)}/`,
+      url: `${SITE}/${p.page}`,
       name: p.name,
     })),
   };
@@ -342,7 +411,7 @@ ${items
   .map(
     (p) => `          <article class="product">
             <div class="bezel"><div class="bezel-core">
-              <a class="plp-link" href="${base}sweets/${slug(p.name)}/">
+              <a class="plp-link" href="${base}${p.page}">
                 <div class="product-media">
                   <img src="${base}${p.img}" alt="${esc(p.name)}" width="800" height="800" loading="lazy" />
                   ${p.tag ? `<span class="product-tag">${esc(p.tag)}</span>` : ""}
@@ -364,12 +433,14 @@ ${items
   return {
     file: path.join("mithai", slug(cat), "index.html"),
     url,
+    img: items[0].img,
+    name: cat,
     html: page({
       base,
       url,
       title,
       description,
-      image: `${SITE}/${items[0].img}`,
+      img: items[0].img,
       imageAlt: items[0].name,
       jsonLd: [listLd, breadcrumbLd(trail)],
       body,
@@ -394,7 +465,7 @@ function policyText(text, base) {
 function policyPage(pol) {
   const base = "../../";
   const url = `${SITE}/policies/${pol.slug}/`;
-  const trail = [{ name: "Home", href: "index.html" }, { name: pol.title }];
+  const trail = [{ name: "Home", href: "" }, { name: pol.title }];
   const others = POLICIES.filter((p) => p.slug !== pol.slug);
   const body = `
     <article class="doc">
@@ -432,7 +503,7 @@ ${others.map((o) => `            <li><a href="${base}policies/${o.slug}/">${esc(
       url,
       title: `${pol.title} · ${BRAND}`,
       description: `${pol.lede} ${BRAND}, Jaipur.`,
-      image: `${SITE}/images/hero.jpg`,
+      img: "images/hero.jpg",
       imageAlt: BRAND,
       jsonLd: [breadcrumbLd(trail)],
       body,
@@ -446,7 +517,7 @@ ${others.map((o) => `            <li><a href="${base}policies/${o.slug}/">${esc(
 function trackPage() {
   const base = "../";
   const url = `${SITE}/track/`;
-  const trail = [{ name: "Home", href: "index.html" }, { name: "Track your order" }];
+  const trail = [{ name: "Home", href: "" }, { name: "Track your order" }];
   const body = `
     <article class="doc track">
       <div class="wrap doc-wrap">
@@ -482,7 +553,7 @@ ${crumbs(trail, base)}
       url,
       title: `Track your order · ${BRAND}`,
       description: `Check where your ${BRAND} order is with your order number and mobile number.`,
-      image: `${SITE}/images/hero.jpg`,
+      img: "images/hero.jpg",
       imageAlt: BRAND,
       jsonLd: [breadcrumbLd(trail)],
       body,
@@ -508,21 +579,54 @@ for (const pg of pages) {
   fs.writeFileSync(pg.file, pg.html);
 }
 
-/* sitemap: home first, then every generated page */
+/* home page structured data: its catalogue list points at the real pages */
+const LD_OPEN = '<script type="application/ld+json">';
+const ldStart = home.indexOf(LD_OPEN);
+const ldEnd = home.indexOf("</script>", ldStart);
+if (ldStart === -1 || ldEnd === -1) throw new Error("home page JSON-LD block missing");
+const homeLd = JSON.parse(home.slice(ldStart + LD_OPEN.length, ldEnd));
+const onSale = [...PRODUCTS, ...GIFT_BOXES];
+homeLd["@graph"] = homeLd["@graph"].map((node) =>
+  node["@type"] !== "ItemList"
+    ? node
+    : {
+        "@type": "ItemList",
+        name: "The counter",
+        numberOfItems: onSale.length,
+        itemListElement: onSale.map((p, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          url: `${SITE}/${p.page}`,
+          name: p.name,
+        })),
+      }
+);
+const nl = home.includes("\r\n") ? "\r\n" : "\n";
+const newHome =
+  home.slice(0, ldStart + LD_OPEN.length) +
+  nl + JSON.stringify(homeLd, null, 2).replace(/</g, "\\u003c").replace(/\n/g, nl) + nl + "  " +
+  home.slice(ldEnd);
+if (newHome !== home) fs.writeFileSync("index.html", newHome);
+
+/* sitemap: home first, then every generated page, each with its photograph */
 const today = new Date().toISOString().slice(0, 10);
-const urls = [`${SITE}/`, ...pages.filter((p) => !p.noindex).map((p) => p.url)];
+const entries = [
+  { url: `${SITE}/`, images: ["images/hero.jpg", "images/story.jpg"] },
+  ...pages.filter((p) => !p.noindex).map((p) => ({ url: p.url, images: p.img ? [jpgOf(p.img)] : [] })),
+];
+const urls = entries.map((e) => e.url);
 fs.writeFileSync(
   "sitemap.xml",
   `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${entries
   .map(
-    (u) => `  <url>
+    ({ url: u, images }) => `  <url>
     <loc>${u}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${u === SITE + "/" ? "1.0" : u.includes("/mithai/") ? "0.8" : "0.7"}</priority>
-  </url>`
+${images.map((im) => `    <image:image><image:loc>${SITE}/${im}</image:loc></image:image>\n`).join("")}  </url>`
   )
   .join("\n")}
 </urlset>

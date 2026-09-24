@@ -168,7 +168,9 @@ Generates one indexable page per sweet, per gift box and per category, then rewr
 | `policies/<slug>/` | 5 | `policies/refunds/` |
 | `track/` | 1 | Track your order (kept out of search results and the sitemap) |
 
-Each page carries its own title, meta description (clipped to 158 chars), canonical, Open Graph and Twitter tags, plus `Product` and `BreadcrumbList` structured data. Category pages carry `ItemList`.
+Each page carries its own title, meta description (the longest version that fits in 160 characters whole, so a snippet never ends on an ellipsis), canonical, Open Graph and Twitter tags (JPEG share image with its size; `og:type` product with price on product pages), plus `Product` (with delivery cost and time as `shippingDetails`) and `BreadcrumbList` structured data. Category pages carry `ItemList`. The build also rewrites the `ItemList` in `index.html` so it points at these pages, and lists each page's photograph in `sitemap.xml` for image search.
+
+Every item's page path is worked out in `products.js` (`item.page`) from its original name, so the homepage cards, the generator and the related links all agree, and an admin rename does not break a link.
 
 The generator reads `products.js` for the catalogue and lifts the ribbon, nav and footer straight out of `index.html`, so the generated pages cannot drift from the real header or the real prices. **Re-run it after editing `products.js` or the site chrome.**
 
@@ -235,7 +237,11 @@ GitHub Actions (`.github/workflows/test.yml`) runs everything, including `vercel
 
 ## SEO
 
-The page ships a full head (title, description, canonical, Open Graph, Twitter card, theme-color, SVG favicon), `robots.txt`, `sitemap.xml`, and JSON-LD structured data describing the shop (`Store`), the site (`WebSite`) and all 15 products with prices in INR.
+The page ships a full head (title, description, canonical, Open Graph, Twitter card, theme-color, SVG favicon), `robots.txt`, `sitemap.xml`, and JSON-LD structured data describing the shop (`Store`), the site (`WebSite`) and a list of all 15 product pages.
+
+**Crawlable catalogue.** The homepage grid is drawn by JavaScript, so each card's name is a real link to that sweet's page (a plain click still opens the quick view; middle-click or Ctrl-click opens the page). Gift box names link to their pages, and the quick view links through too. Without these the product pages were reachable only from the sitemap. Links to the home page use `/`, never `/index.html`, so it has one URL.
+
+`robots.txt` keeps `/api/` closed but allows `/api/store`, the script every page loads for today's prices and availability, so search engines render the pages the way customers see them.
 
 **The domain** is `https://mishri-sweet-house.vercel.app`, the project's Vercel address. To move to a custom domain, change it in:
 

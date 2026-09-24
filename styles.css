@@ -614,6 +614,8 @@ main { padding-bottom: 30px; }
 .bento-cell:hover .bezel { box-shadow: var(--shadow-soft); }
 .bento-body { position: relative; z-index: 1; padding: 32px; display: grid; gap: 8px; }
 .bento-body h3 { font-size: 1.7rem; color: #fff; }
+.bento-body h3 a { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 5px; transition: text-decoration-color 0.4s var(--spring); }
+.bento-body h3 a:hover, .bento-body h3 a:focus-visible { text-decoration-color: var(--saffron); }
 .bento-body p { font-size: 0.95rem; color: rgba(255, 246, 247, 0.92); max-width: 46ch; }
 .bento-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
 .bento-foot .price { font-weight: 700; font-size: 1.15rem; color: #fff; }
@@ -834,6 +836,8 @@ input:focus, textarea:focus { outline: 0; border-color: var(--saffron); box-shad
 .modal-copy .product-meta { font-size: 0.95rem; }
 .modal-copy .desc { color: var(--ink-2); }
 .modal-copy .price { font-size: 1.6rem; font-weight: 700; margin-top: 8px; }
+.modal-copy .modal-more { align-self: flex-start; font-size: 0.95rem; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--hair-strong); text-underline-offset: 4px; transition: text-decoration-color 0.4s var(--spring), color 0.4s var(--spring); }
+.modal-copy .modal-more:hover { color: var(--ink); text-decoration-color: var(--saffron); }
 .modal-copy .modal-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
 .modal-copy .wish-btn { position: static; width: 52px; height: 52px; border: 1px solid var(--hair-strong); box-shadow: none; font-size: 22px; }
 
