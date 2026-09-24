@@ -131,6 +131,8 @@
 /* Base --------------------------------------------------------------- */
 
 *, *::before, *::after { box-sizing: border-box; }
+/* Lenis (smooth-scroll.js) does the easing; native smooth scrolling would fight it. */
+html.lenis { scroll-behavior: auto; }
 html { scroll-behavior: smooth; scroll-padding-top: calc(var(--ribbon-h) + 100px); scrollbar-color: var(--hair-strong) transparent; scrollbar-width: thin; }
 body {
   margin: 0;

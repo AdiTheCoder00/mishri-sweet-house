@@ -24,6 +24,7 @@ The signature interaction: a jaali screen sits over each sweet and opens when yo
 - Wishlist drawer with "Move all to basket"
 - Checkout: validated form, PIN serviceability against ~40 city prefixes, three real payment methods whose CTA names the consequence ("Pay ₹1,078 by UPI"), a cold-chain note when the basket holds a chilled item, and a receipt-style confirmation
 - Light and dark themes (follows the system, toggle in the nav, remembered), full keyboard support, `prefers-reduced-motion` respected
+- Smooth wheel scrolling with Lenis. Touch scrolling stays native, and it switches off under `prefers-reduced-motion`
 
 Cart, wishlist and theme persist in `localStorage`. Nothing is charged and no order is sent.
 
@@ -39,6 +40,8 @@ Cart, wishlist and theme persist in `localStorage`. Nothing is charged and no or
 | `serve.js` | Dependency-free static server for local preview |
 | `admin.html`, `admin.js`, `admin.css` | Shop admin: overview, catalogue edits, orders |
 | `store-settings.js` | Applies the admin's catalogue edits on top of `products.js` in the storefront |
+| `smooth-scroll.js` | Lenis smooth scrolling: eased wheel scrolling, section links that glide clear of the header, paused behind drawers and dialogs |
+| `vendor/lenis/` | [Lenis](https://github.com/darkroomengineering/lenis) 1.3.26 (MIT), vendored so the site still needs no build step or extra CDN |
 | `DESIGN.md` / `PRODUCT.md` | Visual system and product truth |
 
 ## Shop admin

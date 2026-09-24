@@ -192,6 +192,9 @@
     });
   }
 
+  // smooth-scroll.js eases the move when it is running.
+  const goToShop = () => (window.mishriScrollTo ? window.mishriScrollTo("#shop") : (location.hash = "#shop"));
+
   /* ---------------- Cart drawer ---------------- */
 
   const drawer = $("#cart-drawer");
@@ -223,7 +226,7 @@
   $("#cart-open").addEventListener("click", openCart);
   $("#cart-close").addEventListener("click", closeCart);
   overlay.addEventListener("click", closeCart);
-  $("#cart-empty-cta").addEventListener("click", () => { closeCart(); location.hash = "#shop"; });
+  $("#cart-empty-cta").addEventListener("click", () => { closeCart(); goToShop(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && drawer.classList.contains("is-open")) closeCart(); });
 
   function renderCart() {
@@ -332,7 +335,7 @@
   $("#wishlist-open").addEventListener("click", () => { closeCart(); openWishlist(); });
   $("#wishlist-close").addEventListener("click", closeWishlist);
   overlay.addEventListener("click", closeWishlist);
-  $("#wishlist-empty-cta").addEventListener("click", () => { closeWishlist(); location.hash = "#shop"; });
+  $("#wishlist-empty-cta").addEventListener("click", () => { closeWishlist(); goToShop(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && wishDrawer.classList.contains("is-open")) closeWishlist(); });
 
   function renderWishlist() {
