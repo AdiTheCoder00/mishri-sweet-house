@@ -5,5 +5,6 @@ Allow: /
 Disallow: /compare.html
 Disallow: /admin.html
 Disallow: /admin-login.html
+Disallow: /api/
 
 Sitemap: https://mishri-sweet-house.vercel.app/sitemap.xml

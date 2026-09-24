@@ -101,6 +101,8 @@ body.admin { padding-bottom: 64px; }
 .admin-pill.is-dispatched { background: var(--pista-soft); color: var(--pista-ink); }
 .admin-pill.is-delivered { background: transparent; border: 1px solid var(--hair-strong); }
 .admin-pill.is-cancelled { background: transparent; color: var(--danger); border: 1px solid currentColor; }
+.admin-pill.is-unpaid { background: transparent; color: var(--ink-2); border: 1px dashed var(--hair-strong); }
+.admin-payment-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
 
 /* Toolbar -------------------------------------------------------------- */
 

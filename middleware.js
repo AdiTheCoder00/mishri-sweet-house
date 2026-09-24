@@ -11,7 +11,11 @@
 
    Signing in sets an HttpOnly cookie holding an expiry time and an HMAC
    of it, keyed by the password, so changing ADMIN_PASSWORD signs
-   everyone out. Uses only Web APIs: Request, Response and Web Crypto. */
+   everyone out. Uses only Web APIs: Request, Response and Web Crypto.
+
+   When Upstash Redis is connected (see api/_lib/store.js), 10 wrong
+   passwords from one address lock sign-in there for 15 minutes. api/_lib/auth.js
+   checks the same cookie on the admin API routes; keep the two in step. */
 
 const COOKIE = "mishri_admin";
 const SESSION_SECONDS = 12 * 60 * 60;
@@ -65,6 +69,40 @@ function redirect(to, cookie) {
   return new Response(null, { status: 303, headers });
 }
 
+/* ---------------- sign-in lockout ----------------
+   Talks to Upstash over plain fetch: this file can't import api/_lib/store.js. */
+const LOCK_AFTER = 10;
+const LOCK_SECONDS = 15 * 60;
+
+async function upstash(env, commands) {
+  const url = env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL;
+  const token = env.KV_REST_API_TOKEN || env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  try {
+    const res = await fetch(url.replace(/\/+$/, "") + "/pipeline", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(commands),
+    });
+    if (!res.ok) return null;
+    return (await res.json()).map((r) => r.result);
+  } catch {
+    // Storage trouble never locks the owner out; the 600ms pause still applies.
+    return null;
+  }
+}
+
+const lockKey = (request) =>
+  "mishri:rl:login:" + (request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim();
+
+async function lockedOut(request, env) {
+  const got = await upstash(env, [["GET", lockKey(request)]]);
+  return Boolean(got && Number(got[0]) >= LOCK_AFTER);
+}
+const countMiss = (request, env) =>
+  upstash(env, [["SET", lockKey(request), "0", "EX", String(LOCK_SECONDS), "NX"], ["INCR", lockKey(request)]]);
+const clearMisses = (request, env) => upstash(env, [["DEL", lockKey(request)]]);
+
 const cookieFlags = (url) => `Path=/; HttpOnly; SameSite=Strict${url.protocol === "https:" ? "; Secure" : ""}`;
 
 /* Returns a Response to send, or undefined to let the request through to
@@ -82,13 +120,15 @@ async function handle(request, env) {
   if (path === "/admin/login") {
     if (request.method !== "POST") return redirect(LOGIN_PAGE);
     if (!secret) return redirect(LOGIN_PAGE + "?error=setup");
+    if (await lockedOut(request, env)) return redirect(LOGIN_PAGE + "?error=locked");
     let attempt = "";
     try { attempt = String((await request.formData()).get("password") || ""); } catch {}
     if (attempt && attempt.length <= 256 && (await passwordMatches(attempt, secret))) {
+      await clearMisses(request, env);
       return redirect(ADMIN_PAGE, `${COOKIE}=${await makeToken(secret)}; Max-Age=${SESSION_SECONDS}; ${cookieFlags(url)}`);
     }
     // A short pause on every miss slows guessing without bothering a person.
-    await new Promise((r) => setTimeout(r, 600));
+    await Promise.all([countMiss(request, env), new Promise((r) => setTimeout(r, 600))]);
     return redirect(LOGIN_PAGE + "?error=wrong");
   }
 

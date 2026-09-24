@@ -63,11 +63,66 @@ The admin is behind a password that is checked on the server, before `admin.html
 - **On Vercel:** add `ADMIN_PASSWORD` under the project's Settings → Environment Variables (Production and Preview), then redeploy. `middleware.js` does the check.
 - **Locally:** `ADMIN_PASSWORD='your password' node serve.js`. Plain `node serve.js` still serves the store, but the admin stays locked.
 
-Signing in sets an HttpOnly, SameSite=Strict cookie (Secure on https) that lasts 12 hours. It carries an expiry time signed with HMAC-SHA-256, keyed by the password. **Sign out** in the admin bar clears it, and changing `ADMIN_PASSWORD` signs everyone out. A wrong password gets a short delay before the page answers. There is no lockout, so use a long random password.
+Signing in sets an HttpOnly, SameSite=Strict cookie (Secure on https) that lasts 12 hours. It carries an expiry time signed with HMAC-SHA-256, keyed by the password. **Sign out** in the admin bar clears it, and changing `ADMIN_PASSWORD` signs everyone out. A wrong password gets a short delay before the page answers. With Upstash connected, **10 wrong passwords from one address lock sign-in there for 15 minutes**.
 
-### What is still a demo
+`admin.html` and `admin-login.html` are also `noindex` and disallowed in `robots.txt`, to keep them out of search results.
 
-Catalogue edits are stored in `localStorage` under `mishri-admin` and orders under `mishri-orders`, so they only exist in the browser that made them. The sign-in protects the admin page, not that data: a live shop needs a server that owns the catalogue and orders. `admin.html` and `admin-login.html` are also `noindex` and disallowed in `robots.txt`, to keep them out of search results.
+## Going live: orders, alerts and payments
+
+The site runs in two modes and switches by itself:
+
+- **Demo mode** (no database connected): checkout is a demo, and orders and catalogue edits stay in each browser's `localStorage`.
+- **Live mode** (Upstash Redis connected): orders go to the server, catalogue edits reach every customer within about 15 seconds, and the admin shows every order from every customer.
+
+Everything below is set in Vercel under the project's **Settings → Environment Variables**, for Production and Preview. **Redeploy after any change**, because new values only reach new deployments.
+
+| Variable | What it does | Where it comes from |
+| --- | --- | --- |
+| `ADMIN_PASSWORD` | Admin sign-in | You choose it; make it long and random |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Turns on live mode | Set automatically when you add Upstash Redis (below) |
+| `RESEND_API_KEY` | New-order emails | resend.com → API Keys |
+| `ALERT_EMAIL` | Where order emails go (comma-separate several) | Your email address |
+| `ALERT_FROM` | Optional sender, e.g. `Mishri Orders <orders@yourdomain.in>` | A domain you have verified in Resend |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Turns on UPI and card payments | Razorpay Dashboard → Account & Settings → API Keys |
+| `RAZORPAY_WEBHOOK_SECRET` | Confirms payments even if the customer closes the page | The secret you type when adding the webhook (below) |
+
+### 1. Database: Upstash Redis
+
+1. In the Vercel project, open **Storage** (or **Marketplace**), choose **Upstash → Redis**, and create a database on the free plan in the region nearest your customers (Mumbai for India).
+2. Connect it to this project. Vercel adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` for you.
+3. Redeploy. The admin's notice now reads "saved on the shop's server".
+
+Orders and catalogue edits made earlier in demo mode stay in the browser that made them; they are not moved to the database.
+
+### 2. Order emails: Resend
+
+1. Sign up at resend.com with the email address that should receive order alerts, and create an API key.
+2. Set `RESEND_API_KEY` to the key and `ALERT_EMAIL` to that same address, then redeploy.
+
+Until you verify your own domain in Resend, emails come from Resend's shared test sender, which can only deliver to the address you signed up with. That is why `ALERT_EMAIL` should be that address. After verifying a domain, set `ALERT_FROM` to send from it and to any address.
+
+Cash-on-delivery orders are emailed as soon as they are placed. Online orders are emailed once the payment is confirmed. A failed email never blocks an order.
+
+### 3. Payments: Razorpay
+
+1. Create a Razorpay account. **Test mode** keys (`rzp_test_…`) work straight away and take no real money. Live keys (`rzp_live_…`) need Razorpay to approve your business.
+2. Set `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`, then redeploy. Checkout now offers UPI and cards on Razorpay's secure page.
+3. Recommended: in Razorpay go to **Settings → Webhooks → Add**, enter `https://<your site>/api/payments/webhook`, choose a secret, and tick `payment.captured` and `order.paid`. Set the same secret as `RAZORPAY_WEBHOOK_SECRET` and redeploy.
+
+Without Razorpay keys, live mode offers **cash on delivery only**, so no order ever claims a payment that did not happen. The server prices every order from `products.js` plus the admin's edits and ignores prices sent by the browser. An online payment only counts once Razorpay's signature checks out. Orders whose payment was started but not finished show as **Unpaid** in the admin and are left out of takings.
+
+### How it fits together
+
+| Piece | Job |
+| --- | --- |
+| `api/store.js` | `GET /api/store`: a small script telling the pages whether live mode is on, the catalogue edits, and the public Razorpay key |
+| `api/orders.js` | `POST /api/orders`: validates and prices an order, saves it, emails cash-on-delivery orders, and opens a Razorpay order for online ones. Limited to 20 orders an hour per address |
+| `api/payments/verify.js`, `api/payments/webhook.js` | Confirm Razorpay payments (browser report and Razorpay webhook), each checked by signature |
+| `api/admin/orders.js`, `api/admin/catalogue.js` | The admin's data. They need the sign-in cookie |
+| `api/_lib/` | Shared helpers: Upstash REST client, pricing, order storage, Resend email, Razorpay |
+| `middleware.js` | Admin sign-in and lockout (edge runtime, one self-contained file) |
+
+`node serve.js` runs the `api/` routes locally too, reading the same environment variables.
 
 The generated product pages carry prices and copy baked in at build time. Availability from the admin applies there immediately; to publish a new price or description on those pages, copy it into `products.js` and run `node build.js`.
 
@@ -126,4 +181,5 @@ If you change `products.js`, the JSON-LD needs regenerating to match — it is a
 - **The product stories are written demo copy.** See [The per-product copy](#the-per-product-copy). Replace them with the shop's own words.
 - **The reviews are invented.** They are labelled as sample content on the page; swap in real ones or remove the section.
 - **The batch times on the hero tiles are demo values**, as is the delivery PIN list.
-- There is no backend: no stock, no accounts, no payment integration.
+- **Customer sign-in is a demo.** The OTP code is shown on screen and "Google" returns a sample profile. Making it real needs an SMS provider (or Firebase Phone Auth) and Google Identity Services.
+- **There is no stock count.** Mark items *Sold out* in the admin when they run out.

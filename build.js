@@ -136,6 +136,7 @@ ${reRoot(CHROME_FOOT, base)}
   </div>
 
   <script src="${base}products.js"></script>
+  <script src="${base}api/store"></script>
   <script src="${base}store-settings.js"></script>
   <script src="${base}vendor/lenis/lenis.min.js"></script>
   <script src="${base}smooth-scroll.js"></script>

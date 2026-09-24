@@ -9,8 +9,8 @@
 
   const ALL_ITEMS = [...PRODUCTS, ...GIFT_BOXES];
   const findItem = (id) => ALL_ITEMS.find((p) => p.id === id);
-  const FREE_DELIVERY_OVER = 999;
-  const DELIVERY_FEE = 79;
+  const FREE_DELIVERY_OVER = DELIVERY.freeOver;
+  const DELIVERY_FEE = DELIVERY.fee;
 
   /* ---------------- Theme ---------------- */
 
@@ -660,7 +660,9 @@
     const total = inr(orderTotal());
     $$(".pay-detail", checkoutForm).forEach((d) => { d.hidden = d.dataset.pay !== method; });
     $("#cod-note").innerHTML = `<i class="ph-light ph-hand-coins" aria-hidden="true"></i>Keep ${total} ready for the rider. UPI at the door works too.`;
-    const label = { upi: `Pay ${total} by UPI`, card: "Continue to card payment", cod: `Place order, pay ${total} on delivery` }[method];
+    const label = LIVE
+      ? { upi: `Pay ${total} with UPI`, card: `Pay ${total} by card`, cod: `Place order, pay ${total} on delivery` }[method]
+      : { upi: `Pay ${total} by UPI`, card: "Continue to card payment", cod: `Place order, pay ${total} on delivery` }[method];
     $("#place-order").textContent = label;
   }
 
@@ -737,8 +739,78 @@
   // Indian mobile: 10 digits starting 6-9, optionally prefixed by 0 or +91, any spacing or hyphens.
   const normalisePhone = (v) => v.replace(/[\s\-()]/g, "").replace(/^(\+91|0091|0)/, "");
 
+  /* Orders go to the shop's server when it is connected (window.MISHRI_STORE,
+     set by /api/store); otherwise this stays a demo that keeps orders in
+     this browser. */
+  const STORE = window.MISHRI_STORE || { orders: false, razorpayKey: "" };
+  const LIVE = Boolean(STORE.orders);
+  // /api/store did not load (a network blip, or no server at all). Checkout
+  // then asks the server first, so a live shop never takes a demo order.
+  const MODE_UNKNOWN = !window.MISHRI_STORE;
+  const ONLINE_PAY = LIVE && Boolean(STORE.razorpayKey);
+
+  if (LIVE) {
+    // Razorpay collects UPI and cards on its own page; no UPI ID is typed here.
+    $('.pay-detail[data-pay="upi"]', checkoutForm).remove();
+    $('input[value="upi"]', checkoutForm).closest(".pay-option").querySelector(".pay-desc").textContent = "Pay now from any UPI app on Razorpay's secure page.";
+    $('input[value="card"]', checkoutForm).closest(".pay-option").querySelector(".pay-desc").textContent = "Pay now on Razorpay's secure page.";
+    $('.pay-detail[data-pay="card"] .pay-note', checkoutForm).innerHTML = '<i class="ph-light ph-lock-key" aria-hidden="true"></i>Card details go to Razorpay, never to this site.';
+    if (!ONLINE_PAY) {
+      // No payment gateway yet: cash on delivery only.
+      $$('input[value="upi"], input[value="card"]', checkoutForm).forEach((i) => i.closest(".pay-option").remove());
+      $('input[value="cod"]', checkoutForm).checked = true;
+    }
+    $("#checkout-fine").textContent = ONLINE_PAY ? "Online payments are processed securely by Razorpay." : "You pay the rider when the box arrives.";
+  }
+
+  const checkoutError = $("#checkout-error");
+  const showCheckoutError = (message) => { checkoutError.textContent = message; checkoutError.hidden = !message; };
+
+  function setPlacing(btn, method) {
+    btn.disabled = true;
+    btn.setAttribute("aria-busy", "true");
+    const busy = LIVE
+      ? { upi: "Opening secure payment", card: "Opening secure payment", cod: "Placing order" }
+      : { upi: "Sending UPI request", card: "Opening secure page", cod: "Placing order" };
+    btn.innerHTML = `<i class="ph-light ph-circle-notch" aria-hidden="true"></i>${busy[method]}`;
+  }
+  function resetPlaceButton() {
+    const btn = $("#place-order");
+    btn.disabled = false;
+    btn.removeAttribute("aria-busy");
+    renderPayState();
+  }
+
+  // Shows the receipt and empties the basket. lines: [{ name, qty, amount }].
+  function showOrderPlaced({ no, method, total, lines, note, city, pin, title, payLine, fine }) {
+    const name = $("#co-name").value.trim().split(" ")[0];
+    $("#order-success-title").textContent = title;
+    $("#order-success-text").textContent = `Thanks, ${name}. Order ${no} reaches ${city} ${etaText(pin)}. ${payLine}`;
+    $("#order-receipt").innerHTML = `
+      ${lines.map((l) => `<div class="row muted"><span>${escapeHtml(l.name)} × ${l.qty}</span><span>${inr(l.amount)}</span></div>`).join("")}
+      <div class="row total"><span>${method === "cod" ? "Due on delivery" : "Total"}</span><span>${inr(total)}</span></div>
+      ${hasChilled() ? `<div class="row muted"><span>Packed cold with ice packs</span><i class="ph-light ph-snowflake" aria-hidden="true"></i></div>` : ""}
+      ${note ? `<div class="note">Card reads: “${escapeHtml(note)}”</div>` : ""}
+      ${fine ? `<div class="muted">${escapeHtml(fine)}</div>` : ""}`;
+
+    if (account) { account.orders = (account.orders || 0) + 1; saveAccount(); }
+    checkoutForm.hidden = true;
+    $("#order-success").hidden = false;
+    $("#order-success .btn").focus();
+    cart = [];
+    pendingPayment = null;
+    saveCart();
+    renderCart();
+    checkoutForm.reset();
+    resetPlaceButton();
+    showCheckoutError("");
+    $$(".field input, .field textarea", checkoutForm).forEach((i) => clearError(i));
+    $("#delivery-note").hidden = true;
+  }
+
   checkoutForm.addEventListener("submit", (e) => {
     e.preventDefault();
+    showCheckoutError("");
     const pinInput = $("#co-pin");
     const pin = pinInput.value.trim();
     const checks = [
@@ -749,66 +821,151 @@
       /^\d{6}$/.test(pin)
         ? (serviceArea(pin) ? clearError(pinInput) : setError(pinInput, `We don't deliver to ${pin} yet. Right now we ship to Jaipur and 40 cities; the nearest metro PIN usually works.`))
         : setError(pinInput, "Enter a 6 digit PIN code."),
-      payMethod() === "upi"
+      !LIVE && payMethod() === "upi"
         ? validateField($("#co-upi"), (v) => /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(v))
-        : clearError($("#co-upi")),
+        : true,
     ];
     if (checks.includes(false)) {
       checkoutForm.querySelector(".field.has-error input, .field.has-error textarea")?.focus();
       return;
     }
 
-    const btn = $("#place-order");
     const method = payMethod();
-    const total = orderTotal();
-    btn.disabled = true;
-    btn.setAttribute("aria-busy", "true");
-    btn.innerHTML = `<i class="ph-light ph-circle-notch" aria-hidden="true"></i>${{ upi: "Sending UPI request", card: "Opening secure page", cod: "Placing order" }[method]}`;
+    setPlacing($("#place-order"), method);
+    if (LIVE || MODE_UNKNOWN) { placeLiveOrder(method, pin); return; }
+    placeDemoOrder(method, pin);
+  });
 
+  // Demo: nothing leaves the browser.
+  function placeDemoOrder(method, pin) {
+    const total = orderTotal();
     setTimeout(() => {
-      const orderNo = "MSH-" + Math.floor(100000 + Math.random() * 900000);
-      const name = $("#co-name").value.trim().split(" ")[0];
+      const no = "MSH-" + Math.floor(100000 + Math.random() * 900000);
       const city = $("#co-city").value.trim();
       const note = $("#co-note").value.trim();
       const upi = $("#co-upi").value.trim();
-      const eta = etaText(pin);
-      const lines = cart.map((l) => { const p = findItem(l.id); return { name: p.name, qty: l.qty, amount: p.price * l.qty }; });
-
-      $("#order-success-title").textContent = method === "card" ? "Order placed, payment pending" : "Order placed";
-      const payLine = {
-        upi: `A UPI request for ${inr(total)} has gone to ${upi}. Approve it in your app and we start packing.`,
-        card: `Pay ${inr(total)} on the bank's secure page to confirm. We hold the order for 30 minutes.`,
-        cod: `Pay ${inr(total)} in cash or by UPI when the box reaches you.`,
-      }[method];
-      $("#order-success-text").textContent = `Thanks, ${name}. Order ${orderNo} reaches ${city} ${eta}. ${payLine}`;
-      $("#order-receipt").innerHTML = `
-        ${lines.map((l) => `<div class="row muted"><span>${escapeHtml(l.name)} × ${l.qty}</span><span>${inr(l.amount)}</span></div>`).join("")}
-        <div class="row total"><span>${method === "cod" ? "Due on delivery" : "Total"}</span><span>${inr(total)}</span></div>
-        ${hasChilled() ? `<div class="row muted"><span>Packed cold with ice packs</span><i class="ph-light ph-snowflake" aria-hidden="true"></i></div>` : ""}
-        ${note ? `<div class="note">Card reads: “${escapeHtml(note)}”</div>` : ""}
-        <div class="muted">Demo store. Nothing was charged and nothing was sent.</div>`;
-
-      if (account) { account.orders = (account.orders || 0) + 1; saveAccount(); }
       recordOrder({
-        no: orderNo, at: new Date().toISOString(), status: "new", method, total,
+        no, at: new Date().toISOString(), status: "new", method, total,
         customer: { name: $("#co-name").value.trim(), phone: $("#co-phone").value.trim(), address: $("#co-address").value.trim(), city, pin },
         note, lines: cart.map((l) => { const p = findItem(l.id); return { id: l.id, name: p.name, qty: l.qty, price: p.price }; }),
       });
-      checkoutForm.hidden = true;
-      $("#order-success").hidden = false;
-      $("#order-success .btn").focus();
-      cart = [];
-      saveCart();
-      renderCart();
-      checkoutForm.reset();
-      btn.disabled = false;
-      btn.removeAttribute("aria-busy");
-      $$(".field input, .field textarea", checkoutForm).forEach((i) => clearError(i));
-      $("#delivery-note").hidden = true;
+      showOrderPlaced({
+        no, method, total, note, city, pin,
+        lines: cart.map((l) => { const p = findItem(l.id); return { name: p.name, qty: l.qty, amount: p.price * l.qty }; }),
+        title: method === "card" ? "Order placed, payment pending" : "Order placed",
+        payLine: {
+          upi: `A UPI request for ${inr(total)} has gone to ${upi}. Approve it in your app and we start packing.`,
+          card: `Pay ${inr(total)} on the bank's secure page to confirm. We hold the order for 30 minutes.`,
+          cod: `Pay ${inr(total)} in cash or by UPI when the box reaches you.`,
+        }[method],
+        fine: "Demo store. Nothing was charged and nothing was sent.",
+      });
     }, 1100);
-  });
+  }
 
-  // Orders are kept in this browser so admin.html can list and manage them.
+  /* ---------------- Live orders ---------------- */
+
+  // An online order awaiting payment; pressing Pay again reopens it rather
+  // than creating a second order, as long as the details are unchanged.
+  let pendingPayment = null;
+
+  async function postJson(url, body) {
+    try {
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await res.json().catch(() => ({}));
+      // No database connected, or no server behind these pages at all.
+      const noServer = (res.status === 503 && data.error === "storage-not-configured") || res.status === 404 || res.status === 405;
+      return res.ok ? data : { error: data.error || "Something went wrong. Please try again.", field: data.field, noServer };
+    } catch {
+      return { error: "We could not reach the shop. Check your connection and try again." };
+    }
+  }
+
+  function liveFailed(result) {
+    const input = result.field && $(`#co-${result.field}`);
+    if (input) { setError(input, result.error); input.focus(); } else showCheckoutError(result.error);
+    resetPlaceButton();
+  }
+
+  async function placeLiveOrder(method, pin) {
+    const payload = {
+      method,
+      customer: {
+        name: $("#co-name").value.trim(), phone: $("#co-phone").value.trim(), address: $("#co-address").value.trim(),
+        city: $("#co-city").value.trim(), pin,
+      },
+      note: $("#co-note").value.trim(),
+      lines: cart.map((l) => ({ id: l.id, qty: l.qty })),
+    };
+    const key = JSON.stringify(payload);
+    if (pendingPayment && pendingPayment.key === key) { openRazorpay(pendingPayment); return; }
+
+    const result = await postJson("/api/orders", payload);
+    if (result.noServer && MODE_UNKNOWN) { placeDemoOrder(method, pin); return; }
+    if (result.error) { liveFailed(result); return; }
+    if (result.razorpay) {
+      pendingPayment = { key, order: result.order, razorpay: result.razorpay };
+      openRazorpay(pendingPayment);
+      return;
+    }
+    liveOrderPlaced(result.order);
+  }
+
+  function liveOrderPlaced(order) {
+    const paid = order.payment && order.payment.state === "paid";
+    showOrderPlaced({
+      no: order.no, method: order.method, total: order.total, note: order.note,
+      city: order.customer.city, pin: order.customer.pin,
+      lines: order.lines.map((l) => ({ name: l.name, qty: l.qty, amount: l.price * l.qty })),
+      title: paid ? "Paid, order placed" : "Order placed",
+      payLine: paid ? `We have your payment of ${inr(order.total)} and start packing now.` : `Pay ${inr(order.total)} in cash or by UPI when the box reaches you.`,
+      fine: "",
+    });
+  }
+
+  let razorpayScript = null;
+  const loadRazorpay = () => (razorpayScript = razorpayScript || new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(window.Razorpay);
+    s.onerror = () => { razorpayScript = null; reject(new Error("load")); };
+    document.head.appendChild(s);
+  }));
+
+  async function openRazorpay({ order, razorpay }) {
+    let Razorpay;
+    try { Razorpay = await loadRazorpay(); } catch {
+      liveFailed({ error: "The payment page did not load. Check your connection and press Pay again." });
+      return;
+    }
+    const rzp = new Razorpay({
+      key: razorpay.key,
+      order_id: razorpay.orderId,
+      amount: razorpay.amount,
+      currency: razorpay.currency,
+      name: "Mishri Sweet House",
+      description: `Order ${order.no}`,
+      prefill: { name: order.customer.name, contact: normalisePhone(order.customer.phone) },
+      notes: { order_no: order.no },
+      theme: { color: "#e8961e" },
+      handler: async (response) => {
+        setPlacing($("#place-order"), "cod");
+        $("#place-order").lastChild.textContent = "Confirming payment";
+        const result = await postJson("/api/payments/verify", { no: order.no, ...response });
+        if (result.error) { liveFailed(result); return; }
+        liveOrderPlaced(result.order);
+      },
+      modal: {
+        ondismiss: () => {
+          showCheckoutError(`Payment not finished. Your order ${order.no} is saved: press Pay to try again, or choose pay on delivery.`);
+          resetPlaceButton();
+        },
+      },
+    });
+    rzp.open();
+  }
+
+  // Demo mode keeps orders in this browser so admin.html can list them.
   function recordOrder(order) {
     try {
       const orders = JSON.parse(localStorage.getItem("mishri-orders") || "[]");
