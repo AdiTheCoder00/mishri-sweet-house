@@ -24,7 +24,7 @@ The signature interaction: a jaali screen sits over each sweet and opens when yo
 - Quick-view modal with a quantity stepper
 - Basket drawer: per-line totals, a free-delivery nudge, quantity controls that stop at each item's minimum, and Remove with an Undo toast
 - Wishlist drawer with "Move all to basket"
-- Checkout: validated form, PIN serviceability against ~40 city prefixes, three real payment methods whose CTA names the consequence ("Pay ₹1,078 by UPI"), a cold-chain note when the basket holds a chilled item, and a receipt-style confirmation
+- Checkout: validated form, delivery estimate by PIN (same-day in Jaipur, 2 to 5 days anywhere else in India), three real payment methods whose CTA names the consequence ("Pay ₹1,078 by UPI"), a cold-chain note when the basket holds a chilled item, and a receipt-style confirmation
 - Light and dark themes (follows the system, toggle in the nav, remembered), full keyboard support, `prefers-reduced-motion` respected
 - Smooth wheel scrolling with Lenis. Touch scrolling stays native, and it switches off under `prefers-reduced-motion`
 
@@ -180,6 +180,6 @@ If you change `products.js`, the JSON-LD needs regenerating to match — it is a
 - **Replace the photography.** The images were pulled from Flickr by keyword for the demo. Shoot the actual products.
 - **The product stories are written demo copy.** See [The per-product copy](#the-per-product-copy). Replace them with the shop's own words.
 - **The reviews are invented.** They are labelled as sample content on the page; swap in real ones or remove the section.
-- **The batch times on the hero tiles are demo values**, as is the delivery PIN list.
+- **The batch times on the hero tiles are demo values.**
 - **Customer sign-in is a demo.** The OTP code is shown on screen and "Google" returns a sample profile. Making it real needs an SMS provider (or Firebase Phone Auth) and Google Identity Services.
 - **There is no stock count.** Mark items *Sold out* in the admin when they run out.

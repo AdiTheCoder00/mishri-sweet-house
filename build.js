@@ -245,7 +245,7 @@ ${crumbs(trail, base)}
 
             <dl class="pdp-facts">
               ${storage ? `<div><dt>Keeping it</dt><dd>${esc(storage)}</dd></div>` : ""}
-              <div><dt>Delivery</dt><dd>Same-day in Jaipur, next-day to around 40 cities. Free over ₹999.</dd></div>
+              <div><dt>Delivery</dt><dd>Same-day in Jaipur, 2 to 5 days anywhere in India. Free over ₹999.</dd></div>
               <div><dt>Made with</dt><dd>Pure desi ghee and whole milk, no artificial colour. Cooked in five kilo batches each morning.</dd></div>
             </dl>
           </div>

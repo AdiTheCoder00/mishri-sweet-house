@@ -60,7 +60,7 @@
 
   // Every line here restates a promise already made elsewhere on the page.
   const NOTICES = [
-    { long: "Same-day delivery in Jaipur · Next-day to 40 cities", short: "Same-day delivery in Jaipur" },
+    { long: "Same-day delivery in Jaipur · 2 to 5 days anywhere in India", short: "Delivering across India" },
     { long: "Free delivery on orders over ₹999", short: "Free delivery over ₹999" },
     { long: "Festival boxes open for pre-order soon · Join the list", short: "Festival boxes: join the list" },
   ];
@@ -628,18 +628,11 @@
   const checkoutModal = $("#checkout-modal");
   const checkoutForm = $("#checkout-form");
 
-  // Delivery coverage for the demo: PIN prefix -> region. Jaipur (302, 303) is same-day.
-  const SERVICE_AREAS = {
-    "302": "Jaipur", "303": "Jaipur", "30": "Rajasthan", "31": "Rajasthan", "32": "Rajasthan", "33": "Rajasthan", "34": "Rajasthan",
-    "11": "Delhi", "12": "Gurugram and Faridabad", "20": "Noida and Ghaziabad", "16": "Chandigarh", "14": "Ludhiana", "24": "Dehradun",
-    "22": "Lucknow", "21": "Kanpur", "28": "Agra", "45": "Indore", "46": "Bhopal", "49": "Raipur",
-    "40": "Mumbai", "41": "Pune", "42": "Nashik", "44": "Nagpur", "38": "Ahmedabad", "39": "Surat and Vadodara", "36": "Rajkot",
-    "50": "Hyderabad", "52": "Vijayawada", "53": "Visakhapatnam", "56": "Bengaluru", "57": "Mysuru", "60": "Chennai", "62": "Coimbatore", "68": "Kochi", "69": "Thiruvananthapuram",
-    "70": "Kolkata", "75": "Bhubaneswar", "78": "Guwahati", "80": "Patna", "82": "Ranchi",
-  };
-  const serviceArea = (pin) => SERVICE_AREAS[pin.slice(0, 3)] || SERVICE_AREAS[pin.slice(0, 2)] || null;
+  // We deliver anywhere in India: any 6 digit PIN that doesn't start with 0.
+  // Jaipur (302, 303) is same-day; everywhere else takes 2 to 5 days.
+  const validPin = (pin) => /^[1-9]\d{5}$/.test(pin);
   const isSameDay = (pin) => pin.startsWith("302") || pin.startsWith("303");
-  const etaText = (pin) => (isSameDay(pin) ? "today by evening" : "tomorrow");
+  const etaText = (pin) => (isSameDay(pin) ? "today by evening" : "in 2 to 5 days");
   const hasChilled = () => cart.some((l) => findItem(l.id).tag === "Chilled");
   const orderTotal = () => { const sub = cartSubtotal(); return sub + (sub >= FREE_DELIVERY_OVER ? 0 : DELIVERY_FEE); };
   const payMethod = () => checkoutForm.elements.pay.value;
@@ -669,16 +662,17 @@
   function renderDeliveryNote() {
     const pin = $("#co-pin").value.trim();
     const note = $("#delivery-note");
-    const area = /^\d{6}$/.test(pin) ? serviceArea(pin) : null;
-    note.hidden = !area;
-    if (area) {
-      note.innerHTML = `<i class="ph-light ph-truck" aria-hidden="true"></i><span>We deliver to ${escapeHtml(area)}. Order in the next few hours and it reaches you <strong>${etaText(pin)}</strong>.</span>`;
+    note.hidden = !validPin(pin);
+    if (validPin(pin)) {
+      const city = $("#co-city").value.trim();
+      const where = isSameDay(pin) ? "Jaipur" : city || `PIN ${pin}`;
+      note.innerHTML = `<i class="ph-light ph-truck" aria-hidden="true"></i><span>We deliver to ${escapeHtml(where)}. Order now and it reaches you <strong>${etaText(pin)}</strong>.</span>`;
     }
   }
 
   function renderAssurance() {
     const pin = $("#co-pin").value.trim();
-    const eta = /^\d{6}$/.test(pin) && serviceArea(pin) ? `Delivered ${etaText(pin)}` : "Same-day in Jaipur, next-day to 40 cities";
+    const eta = validPin(pin) ? `Delivered ${etaText(pin)}` : "Same-day in Jaipur, 2 to 5 days anywhere in India";
     const items = [
       ["ph-sun-horizon", "Made fresh on the morning of dispatch, not from stock."],
       ["ph-truck", `${eta}, with a call from the rider on the way.`],
@@ -704,6 +698,7 @@
   });
 
   checkoutForm.addEventListener("change", (e) => { if (e.target.name === "pay") renderPayState(); });
+  $("#co-city").addEventListener("input", renderDeliveryNote);
   $("#co-pin").addEventListener("input", () => {
     const input = $("#co-pin");
     input.value = input.value.replace(/\D/g, "").slice(0, 6);
@@ -818,9 +813,7 @@
       validateField($("#co-phone"), (v) => /^[6-9]\d{9}$/.test(normalisePhone(v))),
       validateField($("#co-address"), (v) => v.length >= 6),
       validateField($("#co-city"), (v) => v.length >= 2),
-      /^\d{6}$/.test(pin)
-        ? (serviceArea(pin) ? clearError(pinInput) : setError(pinInput, `We don't deliver to ${pin} yet. Right now we ship to Jaipur and 40 cities; the nearest metro PIN usually works.`))
-        : setError(pinInput, "Enter a 6 digit PIN code."),
+      validPin(pin) ? clearError(pinInput) : setError(pinInput, "Enter a valid 6 digit PIN code."),
       !LIVE && payMethod() === "upi"
         ? validateField($("#co-upi"), (v) => /^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(v))
         : true,
