@@ -15,13 +15,13 @@ const readBody = (req) => new Promise((resolve, reject) => {
   req.on("error", reject);
 });
 
-// Same admin check as middleware.js runs on Vercel.
-async function adminGate(auth, req, res) {
+// Runs middleware.js, the same admin check Vercel runs, on every request.
+async function adminGate(middleware, req, res) {
   const headers = new Headers();
   for (const [k, v] of Object.entries(req.headers)) if (typeof v === "string") headers.set(k, v);
   const body = req.method === "POST" ? await readBody(req) : undefined;
-  const reply = await auth.handle(new Request(`http://${req.headers.host || "localhost"}${req.url}`, { method: req.method, headers, body }), process.env);
-  if (!reply) return false;
+  const reply = await middleware(new Request(`http://${req.headers.host || "localhost"}${req.url}`, { method: req.method, headers, body }));
+  if (reply.headers.get("x-middleware-next")) return false;
   const out = {};
   reply.headers.forEach((v, k) => { if (k !== "set-cookie") out[k] = v; });
   const cookies = reply.headers.getSetCookie();
@@ -31,10 +31,12 @@ async function adminGate(auth, req, res) {
   return true;
 }
 
-import("./lib/admin-auth.mjs").then((auth) => {
+// middleware.js is written as an ES module for Vercel; load it the same way here.
+const source = fs.readFileSync(path.join(ROOT, "middleware.js"));
+import("data:text/javascript;base64," + source.toString("base64")).then(({ default: middleware }) => {
   http.createServer(async (req, res) => {
     try {
-      if (await adminGate(auth, req, res)) return;
+      if (await adminGate(middleware, req, res)) return;
     } catch {
       res.writeHead(500); return res.end();
     }

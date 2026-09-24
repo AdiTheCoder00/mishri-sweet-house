@@ -4,7 +4,7 @@
    catalogue edits under "mishri-admin" (read by store-settings.js on the
    storefront) and orders under "mishri-orders" (written by app.js at
    checkout). The page itself sits behind a server-side sign-in (see
-   lib/admin-auth.mjs); a real shop would also keep the catalogue and
+   middleware.js); a real shop would also keep the catalogue and
    orders on that server rather than in one browser. */
 (function () {
   "use strict";
