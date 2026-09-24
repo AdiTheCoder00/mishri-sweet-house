@@ -751,6 +751,11 @@
   const MODE_UNKNOWN = !window.MISHRI_STORE;
   const ONLINE_PAY = LIVE && Boolean(STORE.razorpayKey);
 
+  // Ask for an email only when the shop can actually send one.
+  if (!(LIVE && STORE.emails)) $("#co-email-field").remove();
+  const customerEmail = () => ($("#co-email") ? $("#co-email").value.trim().toLowerCase() : "");
+  const validEmail = (v) => /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(v);
+
   if (LIVE) {
     // Razorpay collects UPI and cards on its own page; no UPI ID is typed here.
     $('.pay-detail[data-pay="upi"]', checkoutForm).remove();
@@ -784,7 +789,7 @@
   }
 
   // Shows the receipt and empties the basket. lines: [{ name, qty, amount }].
-  function showOrderPlaced({ no, method, total, lines, note, city, pin, title, payLine, fine }) {
+  function showOrderPlaced({ no, method, total, lines, note, city, pin, title, payLine, fine, track }) {
     const name = $("#co-name").value.trim().split(" ")[0];
     $("#order-success-title").textContent = title;
     $("#order-success-text").textContent = `Thanks, ${name}. Order ${no} reaches ${city} ${etaText(pin)}. ${payLine}`;
@@ -793,7 +798,8 @@
       <div class="row total"><span>${method === "cod" ? "Due on delivery" : "Total"}</span><span>${inr(total)}</span></div>
       ${hasChilled() ? `<div class="row muted"><span>Packed cold with ice packs</span><i class="ph-light ph-snowflake" aria-hidden="true"></i></div>` : ""}
       ${note ? `<div class="note">Card reads: “${escapeHtml(note)}”</div>` : ""}
-      ${fine ? `<div class="muted">${escapeHtml(fine)}</div>` : ""}`;
+      ${fine ? `<div class="muted">${escapeHtml(fine)}</div>` : ""}
+      ${track ? `<a class="receipt-track" href="track/?no=${encodeURIComponent(no)}"><i class="ph-light ph-map-pin" aria-hidden="true"></i> Track this order</a>` : ""}`;
 
     if (account) { account.orders = (account.orders || 0) + 1; saveAccount(); }
     checkoutForm.hidden = true;
@@ -818,6 +824,7 @@
     const checks = [
       validateField($("#co-name"), (v) => v.length >= 2),
       validateField($("#co-phone"), (v) => /^[6-9]\d{9}$/.test(normalisePhone(v))),
+      $("#co-email") ? validateField($("#co-email"), (v) => !v || validEmail(v)) : true,
       validateField($("#co-address"), (v) => v.length >= 6),
       validateField($("#co-city"), (v) => v.length >= 2),
       validPin(pin) ? clearError(pinInput) : setError(pinInput, "Enter a valid 6 digit PIN code."),
@@ -892,7 +899,7 @@
       method,
       customer: {
         name: $("#co-name").value.trim(), phone: $("#co-phone").value.trim(), address: $("#co-address").value.trim(),
-        city: $("#co-city").value.trim(), pin,
+        city: $("#co-city").value.trim(), pin, email: customerEmail(),
       },
       note: $("#co-note").value.trim(),
       lines: cart.map((l) => ({ id: l.id, qty: l.qty })),
@@ -918,8 +925,10 @@
       city: order.customer.city, pin: order.customer.pin,
       lines: order.lines.map((l) => ({ name: l.name, qty: l.qty, amount: l.price * l.qty })),
       title: paid ? "Paid, order placed" : "Order placed",
-      payLine: paid ? `We have your payment of ${inr(order.total)} and start packing now.` : `Pay ${inr(order.total)} in cash or by UPI when the box reaches you.`,
+      payLine: (paid ? `We have your payment of ${inr(order.total)} and start packing now.` : `Pay ${inr(order.total)} in cash or by UPI when the box reaches you.`)
+        + (order.customer.email && STORE.emails ? ` A confirmation is on its way to ${order.customer.email}.` : ""),
       fine: "",
+      track: true,
     });
   }
 
@@ -982,13 +991,27 @@
 
   /* ---------------- Newsletter ---------------- */
 
-  $("#newsletter-form").addEventListener("submit", (e) => {
+  // Live: the address is saved for festival-box news. Demo: just says thanks.
+  $("#newsletter-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = $("#nl-email");
-    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value.trim());
-    $("#nl-error").hidden = ok;
-    $("#nl-success").hidden = !ok;
-    if (ok) input.value = "";
+    const btn = $("#newsletter-form .btn");
+    const email = input.value.trim();
+    const show = (error, success) => {
+      $("#nl-error").hidden = !error;
+      if (error) $("#nl-error").textContent = error;
+      $("#nl-success").hidden = !success;
+      if (success) $("#nl-success").textContent = success;
+    };
+    if (!validEmail(email)) { show("Please enter a valid email address.", ""); input.focus(); return; }
+    if (!(LIVE || MODE_UNKNOWN)) { show("", "You are on the list."); input.value = ""; return; }
+    btn.disabled = true;
+    const result = await postJson("/api/subscribe", { email });
+    btn.disabled = false;
+    if (result.noServer && MODE_UNKNOWN) { show("", "You are on the list."); input.value = ""; return; }
+    if (result.error) { show(result.error, ""); return; }
+    show("", result.already ? "You were already on the list. We'll be in touch." : "You are on the list. We'll email you when festival boxes open.");
+    input.value = "";
   });
 
   /* ---------------- Scroll reveal ---------------- */

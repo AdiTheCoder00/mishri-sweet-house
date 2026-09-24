@@ -148,4 +148,34 @@
     <priority>0.8</priority>
     <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/mysore-pak.jpg</image:loc></image:image>
   </url>
+  <url>
+    <loc>https://mishri-sweet-house.vercel.app/policies/shipping/</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mishri-sweet-house.vercel.app/policies/refunds/</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mishri-sweet-house.vercel.app/policies/privacy/</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mishri-sweet-house.vercel.app/policies/terms/</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mishri-sweet-house.vercel.app/policies/contact/</loc>
+    <lastmod>2026-09-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>

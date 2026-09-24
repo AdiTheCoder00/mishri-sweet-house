@@ -88,6 +88,7 @@ const jpgOf = (img) => {
 
 // Pixel size of a JPEG, read from its SOF header, for og:image:width/height.
 function jpegSize(file) {
+  if (!fs.existsSync(file)) return null;
   const b = fs.readFileSync(file);
   for (let i = 2; i + 9 < b.length; ) {
     const marker = b[i + 1];
@@ -127,7 +128,7 @@ function shippingLd(p) {
 
 /* ---------------- page shell ---------------- */
 
-function page({ base, url, title, description, img, imageAlt, jsonLd, body, bodyClass = "", ogType = "website", extraMeta = [] }) {
+function page({ base, url, title, description, img, imageAlt, jsonLd, body, bodyClass = "", ogType = "website", extraMeta = [], scripts = [], robots = "index, follow, max-image-preview:large" }) {
   const social = jpgOf(img);
   const image = `${SITE}/${social}`;
   const size = social.endsWith(".jpg") ? jpegSize(social) : null;
@@ -143,7 +144,7 @@ function page({ base, url, title, description, img, imageAlt, jsonLd, body, body
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}" />
   <link rel="canonical" href="${url}" />
-  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="robots" content="${robots}" />
   <meta name="theme-color" content="#b4455b" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#101014" media="(prefers-color-scheme: dark)" />
   <link rel="icon" href="${base}favicon.svg" type="image/svg+xml" />
@@ -196,7 +197,7 @@ ${reRoot(CHROME_FOOT, base)}
   <script src="${base}vendor/lenis/lenis.min.js"></script>
   <script src="${base}smooth-scroll.js"></script>
   <script src="${base}page.js"></script>
-</body>
+${scripts.map((src) => `  <script src="${base}${src}"></script>\n`).join("")}</body>
 </html>
 `;
 }
@@ -442,12 +443,129 @@ ${items
   };
 }
 
+/* ---------------- policy pages ---------------- */
+
+const { POLICIES, UPDATED, WHATSAPP } = require("./policies.js");
+
+// Plain text in, HTML out: the WhatsApp number and "Track your order" become links.
+function policyText(text, base) {
+  return esc(text)
+    .split(esc(WHATSAPP)).join(`<a href="https://wa.me/${WHATSAPP.replace(/\D/g, "")}">${esc(WHATSAPP)}</a>`)
+    .replace(/Track your order page/g, `<a href="${base}track/">Track your order</a> page`)
+    .replace(/our (Shipping and delivery|Refunds and cancellations) policy/g, (m, name) =>
+      `our <a href="${base}policies/${name.startsWith("Ship") ? "shipping" : "refunds"}/">${name} policy</a>`);
+}
+
+function policyPage(pol) {
+  const base = "../../";
+  const url = `${SITE}/policies/${pol.slug}/`;
+  const trail = [{ name: "Home", href: "" }, { name: pol.title }];
+  const others = POLICIES.filter((p) => p.slug !== pol.slug);
+  const body = `
+    <article class="doc">
+      <div class="wrap doc-wrap">
+${crumbs(trail, base)}
+        <header class="doc-head">
+          <h1>${esc(pol.title)}</h1>
+          <p class="lede">${esc(pol.lede)}</p>
+          <p class="doc-updated">Last updated ${esc(UPDATED)}</p>
+        </header>
+${pol.sections
+  .map(([heading, paras]) => `        <section class="doc-section">
+          <h2>${esc(heading)}</h2>
+${paras
+  .map((p) =>
+    Array.isArray(p)
+      ? `          <ul>\n${p.map((li) => `            <li>${policyText(li, base)}</li>`).join("\n")}\n          </ul>`
+      : `          <p>${policyText(p, base)}</p>`)
+  .join("\n")}
+        </section>`)
+  .join("\n")}
+        <nav class="doc-more" aria-label="Other policies">
+          <h2>More</h2>
+          <ul>
+${others.map((o) => `            <li><a href="${base}policies/${o.slug}/">${esc(o.title)}</a></li>`).join("\n")}
+          </ul>
+        </nav>
+      </div>
+    </article>`;
+  return {
+    file: path.join("policies", pol.slug, "index.html"),
+    url,
+    html: page({
+      base,
+      url,
+      title: `${pol.title} · ${BRAND}`,
+      description: `${pol.lede} ${BRAND}, Jaipur.`,
+      img: "images/hero.jpg",
+      imageAlt: BRAND,
+      jsonLd: [breadcrumbLd(trail)],
+      body,
+      bodyClass: "page-doc",
+    }),
+  };
+}
+
+/* ---------------- track your order ---------------- */
+
+function trackPage() {
+  const base = "../";
+  const url = `${SITE}/track/`;
+  const trail = [{ name: "Home", href: "" }, { name: "Track your order" }];
+  const body = `
+    <article class="doc track">
+      <div class="wrap doc-wrap">
+${crumbs(trail, base)}
+        <header class="doc-head">
+          <h1>Track your order</h1>
+          <p class="lede">Enter your order number and the mobile number you ordered with.</p>
+        </header>
+        <form class="track-form" id="track-form" novalidate>
+          <div class="field-row">
+            <div class="field">
+              <label for="track-no">Order number</label>
+              <input id="track-no" name="no" type="text" inputmode="text" autocomplete="off" placeholder="MSH-100001" required />
+            </div>
+            <div class="field">
+              <label for="track-phone">Mobile number</label>
+              <input id="track-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="98765 43210" required />
+            </div>
+          </div>
+          <p class="field-error" id="track-error" role="alert" hidden></p>
+          <button type="submit" class="btn btn-primary" id="track-submit">Track order <span class="btn-ico"><i class="ph-light ph-arrow-right" aria-hidden="true"></i></span></button>
+        </form>
+        <section class="track-result" id="track-result" aria-live="polite" hidden></section>
+        <p class="track-help">Your order number starts with MSH and is on your receipt and confirmation email. Can't find it? <a href="https://wa.me/${WHATSAPP.replace(/\D/g, "")}">WhatsApp us on ${esc(WHATSAPP)}</a>.</p>
+      </div>
+    </article>`;
+  return {
+    file: path.join("track", "index.html"),
+    url,
+    noindex: true,
+    html: page({
+      base,
+      url,
+      title: `Track your order · ${BRAND}`,
+      description: `Check where your ${BRAND} order is with your order number and mobile number.`,
+      img: "images/hero.jpg",
+      imageAlt: BRAND,
+      jsonLd: [breadcrumbLd(trail)],
+      body,
+      bodyClass: "page-doc",
+      scripts: ["track.js"],
+      robots: "noindex, follow",
+    }),
+  };
+}
+
 /* ---------------- write ---------------- */
 
 const pages = [
   ...PRODUCTS.map((p) => productPage(p)),
   ...GIFT_BOXES.map((b) => productPage(b, "box")),
   ...[...new Set(PRODUCTS.map((p) => p.category))].map(categoryPage),
+  ...POLICIES.map(policyPage),
+  trackPage(),
 ];
 
 for (const pg of pages) {
@@ -488,7 +606,7 @@ if (newHome !== home) fs.writeFileSync("index.html", newHome);
 const today = new Date().toISOString().slice(0, 10);
 const entries = [
   { url: `${SITE}/`, images: ["images/hero.jpg", "images/story.jpg"] },
-  ...pages.map((p) => ({ url: p.url, images: [jpgOf(p.img)] })),
+  ...pages.filter((p) => !p.noindex).map((p) => ({ url: p.url, images: p.img ? [jpgOf(p.img)] : [] })),
 ];
 const urls = entries.map((e) => e.url);
 fs.writeFileSync(
@@ -510,5 +628,5 @@ ${images.map((im) => `    <image:image><image:loc>${SITE}/${im}</image:loc></ima
 );
 
 console.log(`built ${pages.length} pages`);
-console.log(`  ${PRODUCTS.length} sweets, ${GIFT_BOXES.length} gift boxes, ${pages.length - PRODUCTS.length - GIFT_BOXES.length} categories`);
+console.log(`  ${PRODUCTS.length} sweets, ${GIFT_BOXES.length} gift boxes, ${new Set(PRODUCTS.map((p) => p.category)).size} categories, ${POLICIES.length} policy pages, track your order`);
 console.log(`sitemap.xml: ${urls.length} urls`);

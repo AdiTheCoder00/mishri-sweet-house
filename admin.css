@@ -42,6 +42,7 @@ body.admin { padding-bottom: 64px; }
   .admin-brand-sub { display: none; }
   .admin-bar-actions { margin-left: auto; }
   .admin-tabs { order: 3; width: 100%; margin: 0 -4px; overflow-x: auto; scrollbar-width: none; }
+  .admin-tabs a { padding: 0 10px; }
   .admin-store-link span { display: none; }
   .admin-store-link { width: 44px; padding: 0; justify-content: center; }
 }
@@ -186,6 +187,32 @@ body.admin { padding-bottom: 64px; }
 .admin-order-note { font-style: italic; }
 .admin-order-lines .row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-variant-numeric: tabular-nums; }
 .admin-order-lines .row.total { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--hair); font-weight: 700; }
+
+/* Email ------------------------------------------------------------------- */
+
+.admin-email { display: grid; gap: 16px; }
+@media (min-width: 900px) { .admin-email { grid-template-columns: 1fr 1fr; align-items: start; } .admin-announce { grid-column: 1 / -1; } }
+.admin-small { font-size: 0.875rem; }
+.admin-card-head h2 .admin-count { margin-left: 6px; vertical-align: middle; }
+.admin-checks { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; }
+.admin-checks li { display: grid; grid-template-columns: 24px 1fr; gap: 8px; align-items: start; }
+.admin-checks .ok { color: var(--pista-ink); }
+.admin-checks .no { color: var(--danger); }
+.admin-checks .warn { color: var(--saffron); }
+.admin-checks small { display: block; color: var(--ink-2); font-size: 0.85rem; }
+.admin-checks code { font-size: 0.85em; padding: 1px 5px; border-radius: 6px; background: var(--shell); }
+.admin-email-error { margin: 0 0 16px; padding: 12px 14px; border-radius: var(--r-md); background: var(--pink-soft); font-size: 0.9rem; }
+.admin-email-test { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.admin-email-result { font-size: 0.9rem; }
+.admin-email-result.is-ok { color: var(--pista-ink); }
+.admin-email-result.is-bad { color: var(--danger); }
+.admin-subs { list-style: none; margin: 12px 0 0; padding: 0; max-height: 360px; overflow: auto; }
+.admin-subs li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--hair); overflow-wrap: anywhere; }
+.admin-subs small { color: var(--ink-2); white-space: nowrap; }
+.admin-announce { display: grid; gap: 12px; }
+.admin-announce .btn { justify-self: start; }
+.admin-announce-note { color: var(--ink-2); }
+.admin-order-cust .admin-link { overflow-wrap: anywhere; }
 
 /* The toast sits under the bar here, not under the storefront island. */
 body.admin .toast { top: 84px; }
