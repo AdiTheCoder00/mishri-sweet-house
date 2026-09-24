@@ -568,6 +568,8 @@ main { padding-bottom: 30px; }
 .add-btn:hover .btn-ico { background: rgba(26, 26, 34, 0.12); }
 .add-btn:active { transform: scale(0.96); }
 .add-btn.in-basket { border-color: var(--saffron); }
+.add-btn[disabled] { padding: 0 16px; color: var(--ink-2); border-style: dashed; cursor: not-allowed; }
+.add-btn[disabled]:hover { background: transparent; color: var(--ink-2); border-color: var(--hair-strong); }
 .add-btn.in-basket .btn-ico { background: var(--saffron); color: var(--on-saffron); font-size: 13px; font-weight: 700; }
 
 @media (max-width: 479px) {
@@ -706,6 +708,8 @@ main { padding-bottom: 30px; }
 .footer-col h3 { margin-bottom: 8px; font-size: 1rem; }
 .footer-col a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink-2); transition: color 0.4s var(--spring); }
 .footer-col a:hover { color: var(--ink); }
+.footer-admin { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--hair-strong); }
+.footer-admin:hover { color: var(--ink); text-decoration-color: currentColor; }
 .footer-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--hair); font-size: 0.85rem; color: var(--ink-2); }
 
 /* Forms ------------------------------------------------------------------- */

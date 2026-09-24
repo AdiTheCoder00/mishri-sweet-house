@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop admin · Mishri Sweet House</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#b4455b" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#101014" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body class="admin">
+  <header class="admin-bar">
+    <div class="wrap admin-bar-inner">
+      <a href="index.html" class="brand" aria-label="Back to the Mishri Sweet House store">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2l2.6 5.4L20 8.2l-4 3.9.9 5.6L12 15l-4.9 2.7.9-5.6-4-3.9 5.4-.8z" fill="currentColor"/></svg></span>
+        <span>Mishri <span class="admin-brand-sub">Shop admin</span></span>
+      </a>
+      <nav class="admin-tabs" aria-label="Admin sections">
+        <a href="#overview" data-tab="overview">Overview</a>
+        <a href="#catalogue" data-tab="catalogue">Catalogue</a>
+        <a href="#orders" data-tab="orders">Orders <span class="admin-count" id="tab-order-count" hidden></span></a>
+      </nav>
+      <div class="admin-bar-actions">
+        <a href="index.html" class="admin-store-link"><i class="ph-light ph-storefront" aria-hidden="true"></i><span>View store</span></a>
+        <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap admin-main" id="top">
+    <p class="admin-note"><i class="ph-light ph-info" aria-hidden="true"></i>Demo admin. Changes are saved in this browser and show on the storefront opened in this browser. There is no login yet: a live shop needs a server with sign-in before this page goes public.</p>
+
+    <!-- Overview -->
+    <section class="admin-panel" id="panel-overview" aria-labelledby="overview-h">
+      <div class="admin-head">
+        <h1 id="overview-h">Today at the counter</h1>
+        <p class="admin-lede" id="overview-date"></p>
+      </div>
+      <div class="admin-stats" id="stats"></div>
+      <div class="admin-split">
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h2>Latest orders</h2>
+            <a href="#orders" class="admin-link">All orders</a>
+          </div>
+          <div id="recent-orders"></div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h2>Needs attention</h2>
+            <a href="#catalogue" class="admin-link">Catalogue</a>
+          </div>
+          <ul class="admin-attention" id="attention"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Catalogue -->
+    <section class="admin-panel" id="panel-catalogue" aria-labelledby="catalogue-h" hidden>
+      <div class="admin-head">
+        <h1 id="catalogue-h">Catalogue</h1>
+        <p class="admin-lede">Edit prices, copy and availability. Each change saves when you leave the field.</p>
+      </div>
+      <div class="admin-toolbar">
+        <input type="search" id="cat-search" placeholder="Search sweets and boxes" aria-label="Search the catalogue" />
+        <div class="filters" id="cat-filters" role="group" aria-label="Filter by availability">
+          <button class="chip is-active" data-filter="all">All</button>
+          <button class="chip" data-filter="live">On sale</button>
+          <button class="chip" data-filter="soldout">Sold out</button>
+          <button class="chip" data-filter="hidden">Hidden</button>
+          <button class="chip" data-filter="edited">Edited</button>
+        </div>
+        <button class="btn btn-ghost admin-sm" id="cat-reset-all">Restore all originals</button>
+      </div>
+      <div class="admin-items" id="items"></div>
+      <p class="admin-empty" id="items-empty" hidden>Nothing matches that search.</p>
+      <p class="admin-foot-note">Product pages under <code>sweets/</code> and <code>gifts/</code> carry prices and copy baked in at build time. Availability updates there straight away; for new prices or copy on those pages, copy the change into <code>products.js</code> and run <code>node build.js</code>.</p>
+    </section>
+
+    <!-- Orders -->
+    <section class="admin-panel" id="panel-orders" aria-labelledby="orders-h" hidden>
+      <div class="admin-head">
+        <h1 id="orders-h">Orders</h1>
+        <p class="admin-lede">Orders placed through checkout in this browser, newest first.</p>
+      </div>
+      <div class="admin-toolbar">
+        <input type="search" id="order-search" placeholder="Order number, name, phone or city" aria-label="Search orders" />
+        <div class="filters" id="order-filters" role="group" aria-label="Filter by status"></div>
+        <button class="btn btn-ghost admin-sm" id="orders-export">Export CSV</button>
+        <button class="btn btn-ghost admin-sm admin-danger" id="orders-clear">Clear all</button>
+      </div>
+      <div class="admin-orders" id="orders"></div>
+      <p class="admin-empty" id="orders-empty" hidden></p>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span id="toast-text"></span>
+    <button class="toast-action" id="toast-action" hidden></button>
+  </div>
+
+  <script src="products.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

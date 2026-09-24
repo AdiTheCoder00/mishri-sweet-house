@@ -67,7 +67,7 @@
 
   let cart = [];
   try { cart = JSON.parse(localStorage.getItem("mishri-cart") || "[]"); } catch { cart = []; }
-  cart = cart.filter((l) => findItem(l.id));
+  cart = cart.filter((l) => findItem(l.id) && !findItem(l.id).soldOut);
 
   const countAll = () => cart.reduce((n, l) => n + l.qty, 0);
 
@@ -90,11 +90,17 @@
     toastTimer = setTimeout(() => el.classList.remove("is-visible"), 2400);
   }
 
+  // Prices here are baked in at build time; availability set in the admin is not.
   $$("[data-add]").forEach((btn) => {
+    const item = findItem(btn.dataset.add);
+    if (!item || item.soldOut) {
+      btn.disabled = true;
+      btn.textContent = item ? "Sold out today" : "Not available";
+    }
     btn.addEventListener("click", () => {
       const id = btn.dataset.add;
       const p = findItem(id);
-      if (!p) return;
+      if (!p || p.soldOut) return;
       const min = p.minQty || 1;
       const line = cart.find((l) => l.id === id);
       if (line) line.qty = Math.min(MAX_QTY, line.qty + min);

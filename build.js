@@ -132,6 +132,7 @@ ${reRoot(CHROME_FOOT, base)}
   </div>
 
   <script src="${base}products.js"></script>
+  <script src="${base}store-settings.js"></script>
   <script src="${base}page.js"></script>
 </body>
 </html>

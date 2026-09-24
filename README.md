@@ -37,7 +37,21 @@ Cart, wishlist and theme persist in `localStorage`. Nothing is charged and no or
 | `products.js` | Product and gift-box data: edit names, prices, weights and copy here |
 | `images/` | Product and section photography |
 | `serve.js` | Dependency-free static server for local preview |
+| `admin.html`, `admin.js`, `admin.css` | Shop admin: overview, catalogue edits, orders |
+| `store-settings.js` | Applies the admin's catalogue edits on top of `products.js` in the storefront |
 | `DESIGN.md` / `PRODUCT.md` | Visual system and product truth |
+
+## Shop admin
+
+Open `admin.html`, or follow **Shop admin** in the footer of any page. It has three sections:
+
+- **Overview**: today's orders and takings, orders still to fulfil, how much of the catalogue is on sale, and anything that needs attention
+- **Catalogue**: edit each sweet's and gift box's name, price, pack size, tag and card description, and set it to *On sale*, *Sold out* (shown, but cannot be added) or *Hidden* (off the storefront). Edits save when you leave the field and can be undone or restored to the `products.js` original
+- **Orders**: every order placed through checkout, with search, status filters, a status per order (New, Preparing, Out for delivery, Delivered, Cancelled) and CSV export
+
+**This is a demo admin with no backend and no login.** Catalogue edits are stored in `localStorage` under `mishri-admin` and orders under `mishri-orders`, so they only exist in the browser that made them, and anyone who opens `admin.html` can use it. `admin.html` is marked `noindex` and disallowed in `robots.txt`, which keeps it out of search results but does not protect it. A live shop needs a server that owns the catalogue and orders, with sign-in in front of this page.
+
+The generated product pages carry prices and copy baked in at build time. Availability from the admin applies there immediately; to publish a new price or description on those pages, copy it into `products.js` and run `node build.js`.
 
 ## Building the product pages
 
