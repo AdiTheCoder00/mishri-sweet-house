@@ -4,18 +4,21 @@
      orders       true when orders go to the server (storage connected)
      catalogue    the admin's catalogue edits, applied by store-settings.js
      razorpayKey  public Razorpay key id when online payment is on
+     emails       true when customers can be emailed (verified sender set)
 
    Cached briefly at Vercel's edge, so an admin edit shows up within about
    15 seconds without every page view reaching the database. */
 import { storeReady, readCatalogue } from "./_lib/store.js";
 import { publicKeyId } from "./_lib/razorpay.js";
+import { emailConfig } from "./_lib/email.js";
 
 export async function GET() {
-  const payload = { orders: false, catalogue: null, razorpayKey: "" };
+  const payload = { orders: false, catalogue: null, razorpayKey: "", emails: false };
   let cache = "public, max-age=0, s-maxage=15, stale-while-revalidate=60";
   if (storeReady()) {
     payload.orders = true;
     payload.razorpayKey = publicKeyId();
+    payload.emails = emailConfig().customerEmails;
     try {
       payload.catalogue = await readCatalogue();
     } catch {

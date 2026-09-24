@@ -907,9 +907,11 @@
       </div>
       <div class="footer-col">
         <h3>Help</h3>
-        <a href="#faq">Delivery areas</a>
-        <a href="#" onclick="return false">Storage guide</a>
-        <a href="https://wa.me/918744667777" target="_blank" rel="noreferrer">Contact us</a>
+        <a href="track/">Track your order</a>
+        <a href="policies/shipping/">Shipping &amp; delivery</a>
+        <a href="policies/refunds/">Refunds &amp; cancellations</a>
+        <a href="#faq">Storage guide</a>
+        <a href="policies/contact/">Contact us</a>
       </div>
       <div class="footer-col">
         <h3>Follow</h3>
@@ -918,7 +920,7 @@
       </div>
     </div>
     <div class="wrap footer-bottom">
-      <span>Demo store. No real orders are placed.</span>
+      <span>© Mishri Sweet House · <a href="policies/privacy/" class="footer-admin">Privacy</a> · <a href="policies/terms/" class="footer-admin">Terms</a></span>
       <span>Since 1962 · <a href="admin.html" class="footer-admin">Shop admin</a></span>
     </div>
   </footer>
@@ -1051,6 +1053,12 @@
         <input id="co-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+91 98765 43210" required />
         <p class="field-help">We call this number if the delivery rider cannot find you.</p>
         <p class="field-error" hidden>Enter a 10 digit Indian mobile number. Spaces, hyphens and +91 are fine.</p>
+      </div>
+      <div class="field" id="co-email-field">
+        <label for="co-email">Email <span class="optional">(optional)</span></label>
+        <input id="co-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="you@example.com" />
+        <p class="field-help">For your order confirmation and a note when it's out for delivery.</p>
+        <p class="field-error" hidden>Enter a valid email address, or leave it empty.</p>
       </div>
       <div class="field">
         <label for="co-address">Address</label>

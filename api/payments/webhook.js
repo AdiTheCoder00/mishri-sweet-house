@@ -6,7 +6,7 @@
 import { storeReady } from "../_lib/store.js";
 import { orderForRazorpay, markPaid } from "../_lib/orders.js";
 import { webhookSignatureValid } from "../_lib/razorpay.js";
-import { sendOrderAlert } from "../_lib/email.js";
+import { sendOrderAlert, sendOrderConfirmation } from "../_lib/email.js";
 import { json } from "../_lib/auth.js";
 
 export async function POST(request) {
@@ -25,7 +25,10 @@ export async function POST(request) {
     const order = await orderForRazorpay(payment.order_id);
     if (!order) return json({ ok: true, ignored: "unknown order" });
     const updated = await markPaid(order, payment.id);
-    if (updated) await sendOrderAlert(updated, new URL(request.url).origin);
+    if (updated) {
+      const site = new URL(request.url).origin;
+      await Promise.all([sendOrderAlert(updated, site), sendOrderConfirmation(updated, site)]);
+    }
     return json({ ok: true });
   } catch (e) {
     console.error("webhook failed", e);
