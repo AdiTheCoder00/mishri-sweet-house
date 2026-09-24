@@ -3,12 +3,26 @@
    Set ADMIN_PASSWORD in the Vercel project's environment variables. */
 import { handle } from "./lib/admin-auth.mjs";
 
-export default function middleware(request) {
-  return handle(request, process.env);
+// Vercel only lets a request through when the middleware returns a Response
+// carrying this header (what next() in @vercel/functions returns).
+// Returning nothing fails the request with MIDDLEWARE_INVOCATION_FAILED.
+const next = () => new Response(null, { headers: { "x-middleware-next": "1" } });
+
+export default async function middleware(request) {
+  try {
+    const env = typeof process !== "undefined" && process.env ? process.env : {};
+    return (await handle(request, env)) || next();
+  } catch {
+    // Fail closed: if the check itself breaks, keep the admin shut.
+    return new Response("Shop admin is unavailable right now.", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    });
+  }
 }
 
-// Runs on every path but photos and vendored libraries, so no spelling of
-// an admin URL slips past the check. Must stay a literal: Vercel reads it at build time.
+// Only the admin's own URLs, so the storefront never depends on this.
+// Must stay a literal: Vercel reads it at build time.
 export const config = {
-  matcher: ["/((?!images/|vendor/).*)"],
+  matcher: ["/admin", "/admin.html", "/admin.js", "/admin.css", "/admin-login.html", "/admin/:path*"],
 };
