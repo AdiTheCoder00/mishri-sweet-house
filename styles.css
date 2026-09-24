@@ -1072,3 +1072,34 @@ body.no-scroll { overflow: hidden; }
 .plp-link .product-body { gap: 4px; }
 .plp-link .product-name, .plp-link .product-meta, .plp-link .product-price { display: block; }
 .plp-link .product-price { margin-top: 8px; font-weight: 700; }
+
+/* Small screens ---------------------------------------------------------- */
+
+/* The floating chat button would sit on top of drawer and dialog CTAs. */
+body.no-scroll .whatsapp-float,
+body:has(dialog[open]) .whatsapp-float { opacity: 0; visibility: hidden; pointer-events: none; }
+
+/* Five 44px actions leave no room for the wordmark on the narrowest phones;
+   the mark stays and the link keeps its aria-label. */
+@media (max-width: 359px) {
+  .brand-name { display: none; }
+}
+
+@media (max-width: 479px) {
+  /* Email and button share one pill on wider screens; stacked, both stay usable. */
+  .newsletter-row { flex-direction: column; border-radius: var(--r-lg); }
+  .newsletter-row .btn { width: 100%; justify-content: space-between; }
+
+  .bento-body { padding: 24px; }
+  .bento-foot { flex-wrap: wrap; }
+  .bento-foot .add-btn { flex: 1 0 100%; justify-content: space-between; }
+
+  .pdp-actions .btn { width: 100%; justify-content: space-between; }
+  .pdp-actions .btn:not(:has(.btn-ico)) { justify-content: center; }
+}
+
+@media (max-width: 767px) {
+  .footer { padding-top: 64px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px 16px; }
+  .footer-brand { grid-column: 1 / -1; }
+}
