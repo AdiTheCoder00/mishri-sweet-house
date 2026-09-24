@@ -24,11 +24,10 @@
   <meta name="twitter:description" content="Tiny boondi pearls bound with ghee and sugar. The one that shows up at every celebration. ₹399 for 500 g, serves 8 to 10. Fresh from our Jaipur kitchen." />
   <meta name="twitter:image" content="https://mishri-sweet-house.vercel.app/images/motichoor-ladoo.webp" />
 
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <link rel="preload" href="../../vendor/fonts/switzer-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="../../vendor/fonts/clash-display-600.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="../../vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="../../vendor/phosphor/icons.css" />
   <!-- Vercel Web Analytics: page views only, no cookies. Enable it under the project's Analytics tab. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -158,7 +157,7 @@
       </nav>
         <div class="pdp-grid">
           <figure class="pdp-media">
-            <img src="../../images/motichoor-ladoo.webp" alt="Motichoor Ladoo" width="800" height="800" fetchpriority="high" />
+            <img src="../../images/motichoor-ladoo.webp" srcset="../../images/motichoor-ladoo-200.webp 200w, ../../images/motichoor-ladoo-400.webp 400w, ../../images/motichoor-ladoo-600.webp 600w, ../../images/motichoor-ladoo.webp 800w" sizes="(min-width: 1200px) 560px, (min-width: 900px) 45vw, 100vw" alt="Motichoor Ladoo" width="800" height="800" fetchpriority="high" />
           </figure>
 
           <div class="pdp-copy">
@@ -193,7 +192,7 @@
           <h2>More Ladoo</h2>
           <ul>
             <li><a href="../../sweets/besan-ladoo/">
-              <img src="../../images/besan-ladoo.webp" alt="" width="200" height="200" loading="lazy" />
+              <img src="../../images/besan-ladoo.webp" srcset="../../images/besan-ladoo-200.webp 200w, ../../images/besan-ladoo-400.webp 400w, ../../images/besan-ladoo-600.webp 600w, ../../images/besan-ladoo.webp 800w" sizes="200px" alt="" width="200" height="200" loading="lazy" />
               <span>Besan Ladoo</span><span class="rel-price">₹379</span>
             </a></li>
           </ul>
@@ -252,6 +251,7 @@
 
   <script src="../../products.js"></script>
   <script src="../../api/store"></script>
+  <script src="../../monitor.js"></script>
   <script src="../../store-settings.js"></script>
   <script src="../../vendor/lenis/lenis.min.js"></script>
   <script src="../../smooth-scroll.js"></script>

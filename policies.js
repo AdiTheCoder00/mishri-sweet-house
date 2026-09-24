@@ -95,6 +95,7 @@ const POLICIES = [
           "Upstash: stores orders and the festival-box list.",
           "Razorpay: processes online payments.",
           "Resend: sends our emails.",
+          "Sentry: receives a technical report if something on the site breaks, such as the page, your browser type and the error. It does not receive your name, contact details, address or what you ordered.",
           "Our delivery partners: receive your name, phone number and address to deliver your order.",
         ],
       ]],

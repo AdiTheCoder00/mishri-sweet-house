@@ -3,7 +3,7 @@
    Cool white ground. Jaipur pink and pista green as page-scale fields
    carrying a jaali lattice. Saffron pill CTAs. Cusped-arch photo windows.
    Double-bezel tiles: hairline shell, paper core, concentric radii.
-   Clash Display + Satoshi. Spring easing throughout.
+   Clash Display + Switzer. Spring easing throughout.
 ------------------------------------------------------------------ */
 
 :root {
@@ -36,8 +36,8 @@
   --r-md: 1rem;
   --r-sm: 0.75rem;
   --spring: cubic-bezier(0.32, 0.72, 0, 1);
-  --font-display: "Clash Display", "Satoshi", system-ui, sans-serif;
-  --font-body: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Clash Display", "Switzer", system-ui, sans-serif;
+  --font-body: "Switzer", system-ui, -apple-system, "Segoe UI", sans-serif;
   --island-h: 60px;
   --ribbon-h: 38px;
   color-scheme: light;

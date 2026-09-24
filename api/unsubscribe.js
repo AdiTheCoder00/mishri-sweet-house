@@ -4,6 +4,7 @@
    (List-Unsubscribe-Post), POST here to do it. */
 import { storeReady } from "./_lib/store.js";
 import { removeByToken } from "./_lib/subscribers.js";
+import { reportError } from "./_lib/monitor.js";
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const page = (title, body) => new Response(`<!doctype html><html lang="en-IN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${title} · Mishri Sweet House</title>
@@ -27,7 +28,7 @@ export async function POST(request) {
       ? page("You're unsubscribed", "You won't get any more festival-box emails from us.")
       : page("Already unsubscribed", "This address is no longer on our list.");
   } catch (e) {
-    console.error("unsubscribe failed", e);
+    await reportError("unsubscribe failed", e, request);
     return page("Something went wrong", "Please try the link again later, or WhatsApp us on +91 87446 67777.");
   }
 }

@@ -5,6 +5,7 @@
 import { storeReady, overLimit, clientIp } from "./_lib/store.js";
 import { getOrder } from "./_lib/orders.js";
 import { json } from "./_lib/auth.js";
+import { reportError } from "./_lib/monitor.js";
 
 const digits = (s) => String(s || "").replace(/\D/g, "").slice(-10);
 const NOT_FOUND = "We couldn't find an order with that number and mobile number. Check both, or WhatsApp us on +91 87446 67777.";
@@ -41,7 +42,7 @@ export async function POST(request) {
       },
     });
   } catch (e) {
-    console.error("track failed", e);
+    await reportError("track failed", e, request);
     return json({ error: "We couldn't check that just now. Please try again." }, 500);
   }
 }

@@ -1,15 +1,19 @@
-/* Downloads the site's two typefaces from Fontshare into vendor/fonts/, so
-   pages load them from the site itself instead of api.fontshare.com.
+/* Downloads the site's typefaces from Fontshare into vendor/fonts/, so pages
+   load them from the site itself instead of api.fontshare.com.
 
      node tools/fetch-fonts.mjs
 
-   Clash Display and Satoshi are by the Indian Type Foundry, free for
-   commercial use under the ITF Free Font License, which allows self-hosting.
-   Re-run only to change weights (edit FAMILIES) or pick up a new release. */
+   Fontshare no longer serves Satoshi: asking for it returns Switzer, a close
+   relative, which is what the site uses for body text. Both Clash Display
+   and Switzer are by the Indian Type Foundry, free for commercial use under
+   the ITF Free Font License, which allows self-hosting. Re-run only to
+   change weights (edit FAMILIES) or pick up a new release. Fontshare can't
+   be reached from every machine; the "Vendor fonts" GitHub workflow runs
+   this on GitHub's runner and commits the result. */
 import fs from "node:fs";
 import path from "node:path";
 
-const FAMILIES = { "clash-display": [500, 600, 700], satoshi: [400, 500, 700] };
+const FAMILIES = { "clash-display": [500, 600, 700], switzer: [400, 500, 700] };
 const OUT = path.join(import.meta.dirname, "..", "vendor", "fonts");
 const query = Object.entries(FAMILIES).map(([f, w]) => `f[]=${f}@${w.join(",")}`).join("&");
 // Fontshare serves woff2 only to browsers it recognises.
@@ -48,6 +52,6 @@ for (const face of faces) {
 
 fs.writeFileSync(
   path.join(OUT, "fonts.css"),
-  `/* Clash Display and Satoshi by the Indian Type Foundry (fontshare.com), under the
+  `/* ${[...new Set(faces.map((f) => f.family))].join(" and ")} by the Indian Type Foundry (fontshare.com), under the
    ITF Free Font License. Downloaded by tools/fetch-fonts.mjs: do not edit by hand. */\n${rules.join("\n")}\n`
 );

@@ -25,12 +25,11 @@
   <meta name="twitter:description" content="Kaju Katli, Gulab Jamun, Rasmalai and handmade gift boxes, cooked fresh each morning in Jaipur. Same-day delivery in Jaipur, 2 to 5 days anywhere in India." />
   <meta name="twitter:image" content="https://mishri-sweet-house.vercel.app/images/hero.jpg" />
 
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-  <link rel="preload" as="image" href="images/kaju-katli.webp" fetchpriority="high" />
-  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <link rel="preload" as="image" href="images/kaju-katli.webp" imagesrcset="images/kaju-katli-200.webp 200w, images/kaju-katli-400.webp 400w, images/kaju-katli-600.webp 600w, images/kaju-katli.webp 800w" imagesizes="(min-width: 1100px) 300px, (min-width: 768px) 33vw, 50vw" fetchpriority="high" />
+  <link rel="preload" href="vendor/fonts/switzer-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="vendor/fonts/clash-display-600.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="vendor/phosphor/icons.css" />
   <!-- Vercel Web Analytics: page views only, no cookies. Enable it under the project's Analytics tab. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -586,7 +585,7 @@
 <!--
   impeccable direction contract (seed c91e796c)
   THESIS: Jaipur's own screen grammar sells the sweets. Refuses the premium-DTC hero (one photo, three feature cards, product grid) in favour of the counter seen through a jaali.
-  OWN-WORLD: cool white ground; Jaipur pink and pista green as page-scale fields carrying a jaali lattice; saffron pill CTAs with a nested trailing icon; cusped-arch photo windows; double-bezel tiles (hairline shell, paper core, concentric radii); Clash Display + Satoshi; spring easing 0.32,0.72,0,1; dated small-caps batch stamps. The jaali is a field material only: it never covers a sweet.
+  OWN-WORLD: cool white ground; Jaipur pink and pista green as page-scale fields carrying a jaali lattice; saffron pill CTAs with a nested trailing icon; cusped-arch photo windows; double-bezel tiles (hairline shell, paper core, concentric radii); Clash Display + Switzer; spring easing 0.32,0.72,0,1; dated small-caps batch stamps. The jaali is a field material only: it never covers a sweet.
   STORY: a gift-giver in another city sees this morning's counter, believes it was made today and will arrive fresh, picks a box, writes a card, pays knowing what happens next.
   FIRST VIEWPORT: editorial split. Left: headline at 5.5rem over two lines, one sub, primary "Shop the counter" pill. Right: a pink lattice panel with a horizontally scrolling row of arch-framed sweets, each stamped with its batch time; the island nav floats above. Primary action sits under the headline.
   FORM: candidate 6 of 7 (jaali and block-print Jaipur), assigned by the roll; raised by the hand it beat: colour holds a third of the screen, lattice cells stay square, dated stamps, charged emptiness.
@@ -745,7 +744,7 @@
     <section class="story" id="story">
       <div class="wrap story-grid">
         <figure class="story-media reveal">
-          <img src="images/story.webp" alt="The halwai at the Mishri counter with the morning's trays" width="900" height="675" loading="lazy" decoding="async" />
+          <img src="images/story.webp" srcset="images/story-400.webp 400w, images/story-600.webp 600w, images/story.webp 900w" sizes="(min-width: 900px) 45vw, 100vw" alt="The halwai at the Mishri counter with the morning's trays" width="900" height="675" loading="lazy" decoding="async" />
         </figure>
         <div class="story-copy">
           <h2>Three generations, one kadhai.</h2>
@@ -1154,6 +1153,7 @@
 
   <script src="products.js"></script>
   <script src="api/store"></script>
+  <script src="monitor.js"></script>
   <script src="store-settings.js"></script>
   <script src="vendor/lenis/lenis.min.js"></script>
   <script src="smooth-scroll.js"></script>

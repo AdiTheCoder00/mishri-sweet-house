@@ -9,6 +9,7 @@ import { storeReady, redis } from "../_lib/store.js";
 import { listOrders, getOrder, saveOrder, STATUSES } from "../_lib/orders.js";
 import { adminGuard, json } from "../_lib/auth.js";
 import { sendDispatchNotice } from "../_lib/email.js";
+import { reportError } from "../_lib/monitor.js";
 
 export async function GET(request) {
   const denied = await adminGuard(request, storeReady);
@@ -16,7 +17,7 @@ export async function GET(request) {
   try {
     return json({ orders: await listOrders() });
   } catch (e) {
-    console.error("list orders failed", e);
+    await reportError("list orders failed", e, request);
     return json({ error: "Orders could not be loaded." }, 500);
   }
 }
@@ -49,7 +50,7 @@ export async function PATCH(request) {
     await saveOrder(order, false);
     return json({ order, emailed });
   } catch (e) {
-    console.error("update order failed", e);
+    await reportError("update order failed", e, request);
     return json({ error: "The order could not be updated." }, 500);
   }
 }

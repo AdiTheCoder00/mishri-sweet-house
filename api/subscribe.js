@@ -5,6 +5,7 @@ import { storeReady, overLimit, clientIp } from "./_lib/store.js";
 import { addSubscriber, unsubscribeUrl } from "./_lib/subscribers.js";
 import { sendWelcome, validEmail } from "./_lib/email.js";
 import { json } from "./_lib/auth.js";
+import { reportError } from "./_lib/monitor.js";
 
 export async function POST(request) {
   if (!storeReady()) return json({ error: "storage-not-configured" }, 503);
@@ -20,7 +21,7 @@ export async function POST(request) {
     if (created) await sendWelcome(email, unsubscribeUrl(new URL(request.url).origin, token));
     return json({ ok: true, already: !created });
   } catch (e) {
-    console.error("subscribe failed", e);
+    await reportError("subscribe failed", e, request);
     return json({ error: "We could not save that just now. Please try again." }, 500);
   }
 }
