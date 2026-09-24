@@ -679,7 +679,7 @@
     ];
     if (hasChilled()) items.push(["ph-snowflake", "Rasmalai travels in an insulated box with ice packs. Refrigerate on arrival."]);
     items.push(["ph-arrows-counter-clockwise", "Arrived broken or late? We replace it free, no questions."]);
-    items.push(["ph-chat-circle-text", `Questions? <a href="#" onclick="return false">WhatsApp us on +91 98290 12345</a>.`]);
+    items.push(["ph-chat-circle-text", `Questions? <a href="https://wa.me/918744667777" target="_blank" rel="noreferrer">WhatsApp us on +91 87446 67777</a>.`]);
     $("#assure").innerHTML = items.map(([icon, text]) => `<li><i class="ph ${icon}" aria-hidden="true"></i><span>${text}</span></li>`).join("");
   }
 
