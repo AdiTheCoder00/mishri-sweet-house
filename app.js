@@ -430,7 +430,7 @@
               ${wishButton(p.id, p.name)}
             </div>
             <div class="product-body">
-              <a class="product-name" href="${p.page}" data-view>${highlight(p.name)}</a>
+              <a class="product-name" href="${escapeHtml(p.page)}" data-view>${highlight(p.name)}</a>
               <div class="product-meta">${escapeHtml(p.category)} · ${escapeHtml(p.weight)}${serves ? " · " + serves : ""}</div>
               <div class="product-foot">
                 <span class="product-price">${inr(p.price)}</span>
@@ -562,7 +562,7 @@
         ${wishButton(b.id, b.name)}
         <span class="bento-note">Contents shown</span>
         <div class="bento-body">
-          <h3><a href="${b.page}">${escapeHtml(b.name)}</a></h3>
+          <h3><a href="${escapeHtml(b.page)}">${escapeHtml(b.name)}</a></h3>
           <p>${escapeHtml(b.desc)}</p>
           <div class="bento-foot">
             <span class="price">${inr(b.price)} <small>/ ${escapeHtml(b.weight)}</small></span>
@@ -610,7 +610,7 @@
         <p class="desc">${escapeHtml(p.desc)}</p>
         <p class="product-meta">${escapeHtml(p.weight)}${serves ? " · " + serves : ""}</p>
         <div class="price">${inr(p.price)}</div>
-        ${p.page ? `<a class="modal-more" href="${p.page}">How we make it, storage and delivery</a>` : ""}
+        ${p.page ? `<a class="modal-more" href="${escapeHtml(p.page)}">How we make it, storage and delivery</a>` : ""}
         <div class="modal-actions">
           <div class="qty" aria-label="Quantity">
             <button type="button" data-dec aria-label="Decrease quantity"><i class="ph-light ph-minus"></i></button>

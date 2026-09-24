@@ -104,7 +104,13 @@ const ldScript = (obj) =>
 
 // Meta descriptions: the longest candidate that fits whole, so a search
 // snippet never ends mid-sentence on an ellipsis.
-const fit = (candidates, max = 160) => candidates.find((c) => c.length <= max) || candidates[candidates.length - 1];
+// If none fits, the last is clipped at a word boundary as a backstop.
+const fit = (candidates, max = 160) => {
+  const found = candidates.find((c) => c.length <= max);
+  if (found) return found;
+  const last = candidates[candidates.length - 1];
+  return last.slice(0, last.lastIndexOf(" ", max - 1)).replace(/[,.;:]$/, "") + "…";
+};
 
 // Delivery as Google's merchant listings read it: anywhere in India, same-day
 // to 5 days, free when the smallest possible order clears the free line.
