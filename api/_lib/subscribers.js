@@ -13,18 +13,24 @@ const unsubKey = (token) => `mishri:unsub:${token}`;
 const newToken = () => [...crypto.getRandomValues(new Uint8Array(18))].map((b) => b.toString(16).padStart(2, "0")).join("");
 export const unsubscribeUrl = (siteUrl, token) => `${siteUrl}/api/unsubscribe?token=${token}`;
 
-// Returns { created, token }; signing up twice keeps the first sign-up.
+/* Returns { created, token }; signing up twice keeps the first sign-up.
+   SET NX claims the address atomically, so two sign-ups arriving together
+   can't both create a token: only the winner writes the rest and sends
+   the welcome email. */
 export async function addSubscriber(email) {
-  const existing = await redis("GET", subKey(email));
-  if (existing) {
-    try { return { created: false, token: JSON.parse(existing).token }; } catch {}
-  }
   const record = { email, at: new Date().toISOString(), token: newToken() };
-  await pipeline([
-    ["SET", subKey(email), JSON.stringify(record)],
-    ["SET", unsubKey(record.token), email],
-    ["ZADD", LIST, String(Date.now()), email],
-  ]);
+  const claimed = await redis("SET", subKey(email), JSON.stringify(record), "NX");
+  if (!claimed) {
+    const existing = await redis("GET", subKey(email));
+    try { return { created: false, token: JSON.parse(existing).token }; } catch { return { created: false, token: "" }; }
+  }
+  try {
+    await pipeline([["SET", unsubKey(record.token), email], ["ZADD", LIST, String(Date.now()), email]]);
+  } catch (e) {
+    // Don't leave a half-made sign-up that blocks the next attempt.
+    try { await redis("DEL", subKey(email)); } catch {}
+    throw e;
+  }
   return { created: true, token: record.token };
 }
 

@@ -5,7 +5,7 @@
    PATCH  { no, status } moves an order along: new, preparing, dispatched,
           delivered or cancelled. The first move to dispatched emails the
           customer (when they gave an email and a verified sender is set). */
-import { storeReady } from "../_lib/store.js";
+import { storeReady, redis } from "../_lib/store.js";
 import { listOrders, getOrder, saveOrder, STATUSES } from "../_lib/orders.js";
 import { adminGuard, json } from "../_lib/auth.js";
 import { sendDispatchNotice } from "../_lib/email.js";
@@ -34,8 +34,14 @@ export async function PATCH(request) {
     order.updatedAt = new Date().toISOString();
     let emailed = false;
     if (order.status === "dispatched" && !(order.notified && order.notified.dispatched)) {
-      emailed = (await sendDispatchNotice(order)).sent;
-      if (emailed) order.notified = { ...order.notified, dispatched: order.updatedAt };
+      // Claim the notice atomically so two admins dispatching together send
+      // one email; release the claim if sending fails so a retry can send it.
+      const claim = `mishri:notified:dispatch:${order.no}`;
+      if (await redis("SET", claim, order.updatedAt, "NX")) {
+        emailed = (await sendDispatchNotice(order)).sent;
+        if (emailed) order.notified = { ...order.notified, dispatched: order.updatedAt };
+        else await redis("DEL", claim);
+      }
     }
     await saveOrder(order, false);
     return json({ order, emailed });

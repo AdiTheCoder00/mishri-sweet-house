@@ -6,7 +6,7 @@
    DELETE  { email }                                  remove one subscriber */
 import { storeReady } from "../_lib/store.js";
 import { adminGuard, json } from "../_lib/auth.js";
-import { emailConfig, lastEmailError, clearEmailError, sendTestEmail, sendAnnouncement } from "../_lib/email.js";
+import { emailConfig, lastEmailError, clearAlertError, sendTestEmail, sendAnnouncement } from "../_lib/email.js";
 import { listSubscribers, removeSubscriber, unsubscribeUrl } from "../_lib/subscribers.js";
 
 export async function GET(request) {
@@ -34,7 +34,7 @@ export async function POST(request) {
 
   if (body.action === "test") {
     const result = await sendTestEmail(site);
-    if (result.sent) await clearEmailError();
+    if (result.sent) await clearAlertError();
     return json({ ...result, to: emailConfig().alertEmail });
   }
 

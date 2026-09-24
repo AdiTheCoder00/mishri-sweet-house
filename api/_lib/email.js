@@ -12,7 +12,7 @@
 
    Nothing here throws: a failed email must never fail an order. The last
    failure is kept (see lastEmailError) so the admin can show the reason. */
-import { redis, storeReady } from "./store.js";
+import { redis, pipeline, storeReady } from "./store.js";
 
 const inr = (n) => "₹" + Number(n).toLocaleString("en-IN");
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -31,7 +31,9 @@ export const emailConfig = () => ({
   sender: verifiedSender(),
   customerEmails: Boolean(env("RESEND_API_KEY") && verifiedSender()),
 });
-export const validEmail = (s) => typeof s === "string" && s.length <= 254 && /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(s);
+// Printable characters only: no control characters, spaces, quotes or angle brackets.
+export const validEmail = (s) =>
+  typeof s === "string" && s.length <= 254 && !/[\x00-\x1f\x7f]/.test(s) && /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(s);
 
 // Resend's replies, turned into what the shop owner should do about them.
 function explain(status, message) {
@@ -61,8 +63,13 @@ export async function lastEmailError() {
   if (!storeReady()) return null;
   try { const raw = await redis("GET", LAST_ERROR_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
 }
-export async function clearEmailError() {
-  if (storeReady()) try { await redis("DEL", LAST_ERROR_KEY); } catch {}
+/* A working test email only proves the path to ALERT_EMAIL, so it clears a
+   recorded failure only if that failure was an owner alert or a test. A
+   failed customer email or announcement stays until something replaces it. */
+export async function clearAlertError() {
+  const last = await lastEmailError();
+  if (!last || !(last.context === "test" || String(last.context).startsWith("alert "))) return;
+  try { await redis("DEL", LAST_ERROR_KEY); } catch {}
 }
 
 /* One email. Returns { sent, reason }. `from` defaults to the verified
@@ -209,11 +216,20 @@ export async function sendWelcome(email, unsubscribeUrl) {
 }
 
 /* Sends one announcement to many subscribers, 100 per Resend batch call,
-   each with its own unsubscribe link. subscribers: [{ email, unsubscribeUrl }]. */
-export async function sendAnnouncement(subscribers, subject, message) {
+   each with its own unsubscribe link. subscribers: [{ email, unsubscribeUrl }].
+
+   Who has already received it is remembered per announcement (keyed by its
+   subject and message, for 30 days), so sending the same announcement again
+   after a partial failure reaches only the people it missed. */
+export async function sendAnnouncement(allSubscribers, subject, message) {
   const key = env("RESEND_API_KEY");
   const from = verifiedSender();
-  if (!key || !from) return { sent: 0, failed: subscribers.length, reason: "Sending to subscribers needs RESEND_API_KEY and EMAIL_FROM (a sender on a domain verified in Resend)." };
+  if (!key || !from) return { sent: 0, skipped: 0, failed: allSubscribers.length, reason: "Sending to subscribers needs RESEND_API_KEY and EMAIL_FROM (a sender on a domain verified in Resend)." };
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(subject + "\n" + message));
+  const sentKey = "mishri:announce:" + [...new Uint8Array(digest)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+  const already = new Set((await redis("SMEMBERS", sentKey)) || []);
+  const subscribers = allSubscribers.filter((s) => !already.has(s.email));
+  const skipped = allSubscribers.length - subscribers.length;
   const paragraphs = String(message).split(/\n{2,}/).map((p) => `<p style="margin:0 0 12px">${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
   let sent = 0, failed = 0, reason = "";
   for (let i = 0; i < subscribers.length; i += 100) {
@@ -230,7 +246,11 @@ export async function sendAnnouncement(subscribers, subject, message) {
         body: JSON.stringify(batch),
         signal: AbortSignal.timeout(15000),
       });
-      if (res.ok) { sent += batch.length; continue; }
+      if (res.ok) {
+        sent += batch.length;
+        try { await pipeline([["SADD", sentKey, ...batch.map((m) => m.to[0])], ["EXPIRE", sentKey, String(30 * 24 * 60 * 60)]]); } catch {}
+        continue;
+      }
       const data = await res.json().catch(() => ({}));
       reason = explain(res.status, data.message || data.error);
       console.error("announcement batch failed", res.status, data);
@@ -240,5 +260,5 @@ export async function sendAnnouncement(subscribers, subject, message) {
     failed += batch.length;
     await recordFailure("announcement", reason);
   }
-  return { sent, failed, reason };
+  return { sent, skipped, failed, reason };
 }

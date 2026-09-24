@@ -595,8 +595,9 @@
     btn.textContent = "Sending…";
     try {
       const r = await api("POST", "email", { action: "announce", subject, message });
-      if (r.failed) toast(`Sent ${r.sent} of ${r.total}. ${r.reason}`);
-      else { toast(`Sent to ${r.sent} subscriber${r.sent === 1 ? "" : "s"}`); e.target.reset(); }
+      const had = r.skipped ? ` (${r.skipped} already had it)` : "";
+      if (r.failed) toast(`Sent to ${r.sent} of ${r.total - r.skipped}${had}. ${r.reason} Send again to reach only the rest.`);
+      else { toast(`Sent to ${r.sent} subscriber${r.sent === 1 ? "" : "s"}${had}`); e.target.reset(); }
     } catch (err) {
       if (err.message !== "signed-out") toast(err.message);
     }
