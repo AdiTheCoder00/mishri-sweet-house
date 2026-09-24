@@ -80,9 +80,12 @@
     return true;
   }
 
-  function persistOrderStatus(order) {
+  function persistOrderStatus(order, onSaved) {
     if (!LIVE) { saveOrders(); return; }
-    api("PATCH", "orders", { no: order.no, status: order.status }).catch(async (e) => {
+    api("PATCH", "orders", { no: order.no, status: order.status }).then((data) => {
+      if (data.order && data.order.notified) order.notified = data.order.notified;
+      if (onSaved) onSaved(data.emailed);
+    }).catch(async (e) => {
       if (e.message === "signed-out") return;
       toast(`Could not update ${order.no}. Showing the saved orders.`);
       await refreshOrders();
@@ -155,7 +158,7 @@
 
   /* ---------------- tabs ---------------- */
 
-  const TABS = ["overview", "catalogue", "orders"];
+  const TABS = ["overview", "catalogue", "orders", "email"];
   function showTab() {
     const tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "overview";
     TABS.forEach((t) => { $("#panel-" + t).hidden = t !== tab; });
@@ -169,6 +172,7 @@
     window.scrollTo(0, 0);
     // Customers keep ordering while the admin is open: fetch the latest.
     refreshOrders();
+    if (location.hash === "#email") loadEmail();
   });
 
   /* ---------------- overview ---------------- */
@@ -213,6 +217,9 @@
     ITEMS.filter((i) => current(i.id).status === "soldout").forEach((i) =>
       notes.push(`<li><i class="ph-light ph-prohibit" aria-hidden="true"></i><span>${escapeHtml(current(i.id).name)} is marked sold out</span></li>`));
     const hidden = ITEMS.filter((i) => current(i.id).status === "hidden");
+    if (emailState && emailState.lastError) {
+      notes.push(`<li><i class="ph-light ph-envelope-simple-open" aria-hidden="true"></i><a href="#email">An email failed to send. See why</a></li>`);
+    }
     if (hidden.length) notes.push(`<li><i class="ph-light ph-eye-slash" aria-hidden="true"></i><span>Hidden from the store: ${hidden.map((i) => escapeHtml(current(i.id).name)).join(", ")}</span></li>`);
     $("#attention").innerHTML = notes.length ? notes.join("") : `<li class="admin-empty"><i class="ph-light ph-check-circle" aria-hidden="true"></i>All clear. Everything is on sale and no order is waiting.</li>`;
 
@@ -411,6 +418,7 @@
           <div class="admin-order-cust">
             <strong>${escapeHtml(c.name)}</strong>
             <a href="tel:${escapeHtml(c.phone)}" class="admin-link">${escapeHtml(c.phone)}</a>
+            ${c.email ? `<a href="mailto:${escapeHtml(c.email)}" class="admin-link">${escapeHtml(c.email)}</a>` : ""}
             <span>${escapeHtml(c.address)}, ${escapeHtml(c.city)} ${escapeHtml(c.pin)}</span>
             ${o.note ? `<span class="admin-order-note">Card: “${escapeHtml(o.note)}”</span>` : ""}
           </div>
@@ -444,7 +452,7 @@
     const order = orders.find((o) => o.no === sel.closest(".admin-order").dataset.no);
     const prev = order.status;
     order.status = sel.value;
-    persistOrderStatus(order);
+    persistOrderStatus(order, (emailed) => { if (emailed) toast(`${order.no}: out for delivery. ${order.customer.name.split(" ")[0]} has been emailed`); });
     renderOrders();
     renderOverview();
     toast(`${order.no}: ${STATUSES[order.status].toLowerCase()}`, {
@@ -460,20 +468,24 @@
   });
   $("#order-search").addEventListener("input", (e) => { orderQuery = e.target.value.trim(); renderOrders(); });
 
-  $("#orders-export").addEventListener("click", () => {
-    if (!orders.length) { toast("No orders to export"); return; }
+  function downloadCsv(rows, name) {
     const cell = (v) => `"${String(v).replace(/"/g, '""')}"`;
-    const rows = [["Order", "Placed", "Status", "Name", "Phone", "Address", "City", "PIN", "Payment", "Payment ID", "Items", "Total", "Card note"]]
-      .concat(orders.map((o) => [
-        o.no, o.at, STATUSES[o.status], o.customer.name, o.customer.phone, o.customer.address, o.customer.city, o.customer.pin,
-        payLabel(o), (o.payment && o.payment.paymentId) || "", o.lines.map((l) => `${l.name} x ${l.qty}`).join("; "), o.total, o.note || "",
-      ]));
     const blob = new Blob([rows.map((r) => r.map(cell).join(",")).join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `mishri-orders-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${name}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $("#orders-export").addEventListener("click", () => {
+    if (!orders.length) { toast("No orders to export"); return; }
+    const rows = [["Order", "Placed", "Status", "Name", "Phone", "Email", "Address", "City", "PIN", "Payment", "Payment ID", "Items", "Total", "Card note"]]
+      .concat(orders.map((o) => [
+        o.no, o.at, STATUSES[o.status], o.customer.name, o.customer.phone, o.customer.email || "", o.customer.address, o.customer.city, o.customer.pin,
+        payLabel(o), (o.payment && o.payment.paymentId) || "", o.lines.map((l) => `${l.name} x ${l.qty}`).join("; "), o.total, o.note || "",
+      ]));
+    downloadCsv(rows, "mishri-orders");
   });
 
   $("#orders-clear").addEventListener("click", () => {
@@ -486,12 +498,118 @@
     toast("Orders cleared", { label: "Undo", onClick: () => { orders = before; saveOrders(); render(); } });
   });
 
+  /* ---------------- email ---------------- */
+
+  let emailState = null;
+
+  async function loadEmail() {
+    if (!LIVE) return;
+    try { emailState = await api("GET", "email"); } catch (e) {
+      if (e.message !== "signed-out") toast("Email settings could not be loaded.");
+    }
+    render();
+  }
+
+  function renderEmail() {
+    $("#email-demo").hidden = LIVE;
+    $("#email-live").hidden = !LIVE || !emailState;
+    if (!LIVE || !emailState) return;
+    const c = emailState.config;
+    const row = (state, title, detail) => {
+      const icon = { ok: "ph-check-circle ok", no: "ph-x-circle no", warn: "ph-warning-circle warn" }[state];
+      const said = { ok: "Done", no: "Missing", warn: "Not set up" }[state];
+      return `<li><i class="ph-light ${icon}" aria-hidden="true"></i><span><span class="sr-only">${said}: </span>${title}<small>${detail}</small></span></li>`;
+    };
+    $("#email-checks").innerHTML = [
+      row("ok", "Database connected", "Orders are saved on the server, so emails can go out."),
+      c.apiKey
+        ? row("ok", "Resend API key is set", "<code>RESEND_API_KEY</code>")
+        : row("no", "Resend API key is missing", "Add <code>RESEND_API_KEY</code> in Vercel → Settings → Environment Variables, then redeploy."),
+      c.alertEmail.length
+        ? row("ok", `Order alerts go to ${escapeHtml(c.alertEmail.join(", "))}`, "<code>ALERT_EMAIL</code>")
+        : row("no", "No address for order alerts", "Add <code>ALERT_EMAIL</code> in Vercel with the address that should get new orders, then redeploy."),
+      c.sender
+        ? row("ok", `Customer emails are on, from ${escapeHtml(c.sender)}`, "Order confirmations, out-for-delivery updates and the festival-box list.")
+        : row("warn", "Customer emails are off", "To email customers and the festival-box list, verify a domain you own in Resend (Domains) and set <code>EMAIL_FROM</code> in Vercel, e.g. <code>Mishri Sweet House &lt;orders@yourdomain.in&gt;</code>. Until then alerts come from Resend's test sender, which only reaches the address your Resend account was opened with."),
+    ].join("");
+
+    const err = emailState.lastError;
+    const errBox = $("#email-last-error");
+    errBox.hidden = !err;
+    if (err) errBox.innerHTML = `<strong>Last email failed</strong> (${escapeHtml(fmtDate(err.at))}, ${escapeHtml(err.context)}): ${escapeHtml(err.reason)}`;
+
+    const subs = emailState.subscribers;
+    $("#sub-count").textContent = subs.length;
+    $("#sub-empty").hidden = subs.length > 0;
+    $("#sub-list").innerHTML = subs.map((s) => `
+      <li><span>${escapeHtml(s.email)} <small>${escapeHtml(fmtDate(s.at))}</small></span>
+        <button class="admin-link" data-remove-sub="${escapeHtml(s.email)}">Remove</button></li>`).join("");
+
+    const canSend = Boolean(c.apiKey && c.sender);
+    $("#announce-send").disabled = !canSend || !subs.length;
+    $("#announce-send").textContent = subs.length ? `Send to ${subs.length} subscriber${subs.length === 1 ? "" : "s"}` : "Send";
+    $("#announce-note").textContent = !canSend
+      ? "Sending to the list needs a verified sender (EMAIL_FROM), because Resend's test sender can't reach your subscribers."
+      : !subs.length ? "Nobody has signed up yet." : "Each subscriber gets their own copy with an unsubscribe link.";
+  }
+
+  $("#email-test").addEventListener("click", async (e) => {
+    const btn = e.currentTarget, out = $("#email-test-result");
+    btn.disabled = true;
+    out.className = "admin-email-result";
+    out.textContent = "Sending…";
+    try {
+      const r = await api("POST", "email", { action: "test" });
+      out.classList.add(r.sent ? "is-ok" : "is-bad");
+      out.textContent = r.sent ? `Sent to ${r.to.join(", ")}. Check that inbox (and spam).` : r.reason;
+    } catch (err) {
+      if (err.message !== "signed-out") { out.classList.add("is-bad"); out.textContent = err.message; }
+    }
+    btn.disabled = false;
+    await loadEmail();
+  });
+
+  $("#sub-list").addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-remove-sub]");
+    if (!btn || !confirm(`Remove ${btn.dataset.removeSub} from the festival-box list?`)) return;
+    try { await api("DELETE", "email", { email: btn.dataset.removeSub }); toast("Removed"); } catch (err) {
+      if (err.message !== "signed-out") toast(err.message);
+    }
+    await loadEmail();
+  });
+
+  $("#sub-export").addEventListener("click", () => {
+    const subs = (emailState && emailState.subscribers) || [];
+    if (!subs.length) { toast("No subscribers to export"); return; }
+    downloadCsv([["Email", "Signed up"], ...subs.map((s) => [s.email, s.at])], "mishri-subscribers");
+  });
+
+  $("#announce-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const subject = $("#announce-subject").value.trim(), message = $("#announce-message").value.trim();
+    const n = emailState ? emailState.subscribers.length : 0;
+    if (!subject || !message) { toast("Write a subject and a message"); return; }
+    if (!confirm(`Email "${subject}" to ${n} subscriber${n === 1 ? "" : "s"} now? This can't be undone.`)) return;
+    const btn = $("#announce-send");
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    try {
+      const r = await api("POST", "email", { action: "announce", subject, message });
+      if (r.failed) toast(`Sent ${r.sent} of ${r.total}. ${r.reason}`);
+      else { toast(`Sent to ${r.sent} subscriber${r.sent === 1 ? "" : "s"}`); e.target.reset(); }
+    } catch (err) {
+      if (err.message !== "signed-out") toast(err.message);
+    }
+    await loadEmail();
+  });
+
   /* ---------------- render and sync ---------------- */
 
   function render() {
     renderOverview();
     if (!$("#panel-catalogue").hidden) renderCatalogue();
     if (!$("#panel-orders").hidden) renderOrders();
+    if (!$("#panel-email").hidden) renderEmail();
   }
 
   // Demo: an order placed in the store tab shows up here without a reload.
@@ -523,6 +641,7 @@
       : "Demo mode: no database is connected, so catalogue changes and orders are kept in this browser only. Connect Upstash Redis in Vercel to share them with every customer.";
     $("#orders-clear").hidden = LIVE;
     if (LIVE) {
+      loadEmail();
       // Orders arrive from customers' browsers; check for new ones regularly.
       setInterval(() => { if (!document.hidden) refreshOrders(); }, 30000);
       document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshOrders(); });

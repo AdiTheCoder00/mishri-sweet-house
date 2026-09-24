@@ -25,6 +25,7 @@
         <a href="#overview" data-tab="overview">Overview</a>
         <a href="#catalogue" data-tab="catalogue">Catalogue</a>
         <a href="#orders" data-tab="orders">Orders <span class="admin-count" id="tab-order-count" hidden></span></a>
+        <a href="#email" data-tab="email">Email</a>
       </nav>
       <div class="admin-bar-actions">
         <a href="index.html" class="admin-store-link"><i class="ph-light ph-storefront" aria-hidden="true"></i><span>View store</span></a>
@@ -90,7 +91,7 @@
     <section class="admin-panel" id="panel-orders" aria-labelledby="orders-h" hidden>
       <div class="admin-head">
         <h1 id="orders-h">Orders</h1>
-        <p class="admin-lede">Orders placed through checkout in this browser, newest first.</p>
+        <p class="admin-lede">Every order placed through checkout, newest first.</p>
       </div>
       <div class="admin-toolbar">
         <input type="search" id="order-search" placeholder="Order number, name, phone or city" aria-label="Search orders" />
@@ -100,6 +101,42 @@
       </div>
       <div class="admin-orders" id="orders"></div>
       <p class="admin-empty" id="orders-empty" hidden></p>
+    </section>
+
+    <!-- Email -->
+    <section class="admin-panel" id="panel-email" aria-labelledby="email-h" hidden>
+      <div class="admin-head">
+        <h1 id="email-h">Email</h1>
+        <p class="admin-lede">Order alerts to you, order emails to customers, and the festival-box list.</p>
+      </div>
+      <p class="admin-empty" id="email-demo" hidden>Email needs the shop's database. Connect Upstash Redis in Vercel (see the README), redeploy, and this page shows your email setup and subscribers. Until then the site is in demo mode and sends no email at all.</p>
+      <div class="admin-email" id="email-live" hidden>
+        <div class="admin-card">
+          <div class="admin-card-head"><h2>Setup</h2></div>
+          <ul class="admin-checks" id="email-checks"></ul>
+          <div class="admin-email-error" id="email-last-error" role="status" hidden></div>
+          <div class="admin-email-test">
+            <button class="btn btn-ghost admin-sm" id="email-test">Send test email</button>
+            <p class="admin-email-result" id="email-test-result" role="status"></p>
+          </div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-head">
+            <h2>Festival-box list <span class="admin-count" id="sub-count">0</span></h2>
+            <button class="admin-link" id="sub-export">Export CSV</button>
+          </div>
+          <p class="admin-lede admin-small">Everyone who pressed "Notify me" on the homepage. Each email you send them has its own unsubscribe link.</p>
+          <ul class="admin-subs" id="sub-list"></ul>
+          <p class="admin-empty" id="sub-empty" hidden>No sign-ups yet.</p>
+        </div>
+        <form class="admin-card admin-announce" id="announce-form">
+          <div class="admin-card-head"><h2>Email the list</h2></div>
+          <label class="admin-field"><span>Subject</span><input type="text" id="announce-subject" maxlength="150" placeholder="Diwali boxes are open for pre-order" required /></label>
+          <label class="admin-field"><span>Message</span><textarea id="announce-message" rows="6" maxlength="5000" placeholder="Our Diwali Box is back: six sweets in a wooden box, ₹1,899. Pre-order at mishri-sweet-house.vercel.app before 25 October." required></textarea></label>
+          <p class="admin-small admin-announce-note" id="announce-note"></p>
+          <button type="submit" class="btn btn-primary admin-sm" id="announce-send">Send</button>
+        </form>
+      </div>
     </section>
   </main>
 

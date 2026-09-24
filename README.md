@@ -80,9 +80,9 @@ Everything below is set in Vercel under the project's **Settings → Environment
 | --- | --- | --- |
 | `ADMIN_PASSWORD` | Admin sign-in | You choose it; make it long and random |
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Turns on live mode | Set automatically when you add Upstash Redis (below) |
-| `RESEND_API_KEY` | New-order emails | resend.com → API Keys |
-| `ALERT_EMAIL` | Where order emails go (comma-separate several) | Your email address |
-| `ALERT_FROM` | Optional sender, e.g. `Mishri Orders <orders@yourdomain.in>` | A domain you have verified in Resend |
+| `RESEND_API_KEY` | Sends email | resend.com → API Keys |
+| `ALERT_EMAIL` | Where new-order alerts go (comma-separate several) | Your email address |
+| `EMAIL_FROM` | Sender for everything, e.g. `Mishri Sweet House <orders@yourdomain.in>`. Turns on emails to customers and the festival-box list | A domain you have verified in Resend (`ALERT_FROM` still works too) |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Turns on UPI and card payments | Razorpay Dashboard → Account & Settings → API Keys |
 | `RAZORPAY_WEBHOOK_SECRET` | Confirms payments even if the customer closes the page | The secret you type when adding the webhook (below) |
 
@@ -94,12 +94,31 @@ Everything below is set in Vercel under the project's **Settings → Environment
 
 Orders and catalogue edits made earlier in demo mode stay in the browser that made them; they are not moved to the database.
 
-### 2. Order emails: Resend
+### 2. Email: Resend
 
+There are three kinds of email:
+
+| Email | Goes to | Needs |
+| --- | --- | --- |
+| New-order alert | You (`ALERT_EMAIL`) | `RESEND_API_KEY`, `ALERT_EMAIL` |
+| Order confirmation, and "out for delivery" when you mark it so in the admin | The customer, if they gave an email at checkout | Plus `EMAIL_FROM` |
+| Welcome note, and anything you send the festival-box list | People who pressed "Notify me" | Plus `EMAIL_FROM` |
+
+**Order alerts only:**
 1. Sign up at resend.com with the email address that should receive order alerts, and create an API key.
 2. Set `RESEND_API_KEY` to the key and `ALERT_EMAIL` to that same address, then redeploy.
 
-Until you verify your own domain in Resend, emails come from Resend's shared test sender, which can only deliver to the address you signed up with. That is why `ALERT_EMAIL` should be that address. After verifying a domain, set `ALERT_FROM` to send from it and to any address.
+Without your own domain, email goes out from Resend's shared test sender, which **only delivers to the address the Resend account was opened with**. That is why `ALERT_EMAIL` must be that exact address. It is also the most common reason alerts don't arrive.
+
+**Emails to customers and the festival-box list** need a domain you own, such as `mishrisweets.in`. The `vercel.app` address can't be verified.
+1. In Resend, go to **Domains → Add Domain** and add the DNS records it shows at your domain provider. Wait until it says **Verified**.
+2. Set `EMAIL_FROM`, e.g. `Mishri Sweet House <orders@mishrisweets.in>`, then redeploy.
+
+The checkout's optional email field only appears once customer emails are on, so it never promises an email that can't be sent.
+
+**Checking it:** the admin's **Email** tab shows what's set up. It has a **Send test email** button that reports exactly what Resend said, and it shows the last failed email with the fix, for example "ALERT_EMAIL must be the address you signed up to Resend with". The Overview's "Needs attention" list also flags failed emails.
+
+**The festival-box list:** the homepage "Notify me" form saves addresses to the database. Signing up twice doesn't create a duplicate. The Email tab lists subscribers, exports them as CSV, removes addresses, and emails the whole list, 100 at a time, through Resend's batch sending. Every email carries its own unsubscribe link, plus the headers mail apps use for one-click unsubscribe. The link opens a confirm button rather than unsubscribing straight away, because mail scanners open links on their own.
 
 Cash-on-delivery orders are emailed as soon as they are placed. Online orders are emailed once the payment is confirmed. A failed email never blocks an order.
 
@@ -118,8 +137,9 @@ Without Razorpay keys, live mode offers **cash on delivery only**, so no order e
 | `api/store.js` | `GET /api/store`: a small script telling the pages whether live mode is on, the catalogue edits, and the public Razorpay key |
 | `api/orders.js` | `POST /api/orders`: validates and prices an order, saves it, emails cash-on-delivery orders, and opens a Razorpay order for online ones. Limited to 20 orders an hour per address |
 | `api/payments/verify.js`, `api/payments/webhook.js` | Confirm Razorpay payments (browser report and Razorpay webhook), each checked by signature |
-| `api/admin/orders.js`, `api/admin/catalogue.js` | The admin's data. They need the sign-in cookie |
-| `api/_lib/` | Shared helpers: Upstash REST client, pricing, order storage, Resend email, Razorpay |
+| `api/admin/orders.js`, `api/admin/catalogue.js`, `api/admin/email.js` | The admin's data, email status, test email and list sending. They need the sign-in cookie |
+| `api/subscribe.js`, `api/unsubscribe.js` | The "Notify me" list: sign-up (with a welcome email) and unsubscribe |
+| `api/_lib/` | Shared helpers: Upstash REST client, pricing, order storage, subscribers, Resend email (with plain-English error explanations), Razorpay |
 | `middleware.js` | Admin sign-in and lockout (edge runtime, one self-contained file) |
 
 `node serve.js` runs the `api/` routes locally too, reading the same environment variables.

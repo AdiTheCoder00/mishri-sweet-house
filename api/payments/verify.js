@@ -3,7 +3,7 @@
 import { storeReady } from "../_lib/store.js";
 import { getOrder, markPaid } from "../_lib/orders.js";
 import { paymentSignatureValid } from "../_lib/razorpay.js";
-import { sendOrderAlert } from "../_lib/email.js";
+import { sendOrderAlert, sendOrderConfirmation } from "../_lib/email.js";
 import { json } from "../_lib/auth.js";
 
 export async function POST(request) {
@@ -19,7 +19,10 @@ export async function POST(request) {
       return json({ error: "The payment could not be confirmed. If money left your account, message us on WhatsApp with order " + order.no + "." }, 400);
     }
     const updated = await markPaid(order, body.razorpay_payment_id);
-    if (updated) await sendOrderAlert(updated, new URL(request.url).origin);
+    if (updated) {
+      const site = new URL(request.url).origin;
+      await Promise.all([sendOrderAlert(updated, site), sendOrderConfirmation(updated, site)]);
+    }
     return json({ order: updated || (await getOrder(order.no)) });
   } catch (e) {
     console.error("verify failed", e);

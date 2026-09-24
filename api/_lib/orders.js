@@ -1,6 +1,7 @@
 /* Mishri Sweet House. Orders: validation, pricing and storage. */
 import { redis, pipeline, KEYS, readCatalogue } from "./store.js";
 import { effectiveItem, DELIVERY } from "./catalogue.js";
+import { validEmail } from "./email.js";
 
 export const STATUSES = ["new", "preparing", "dispatched", "delivered", "cancelled"];
 export const METHODS = ["cod", "upi", "card"];
@@ -21,8 +22,12 @@ export async function buildOrder(input) {
     address: str(c.address, 300),
     city: str(c.city, 60),
     pin: str(c.pin, 6),
+    email: str(c.email, 254).toLowerCase(),
   };
   if (customer.name.length < 2) return { error: "Enter your full name.", field: "name" };
+  // Optional: only for the order confirmation and delivery updates.
+  if (customer.email && !validEmail(customer.email)) return { error: "Enter a valid email address, or leave it empty.", field: "email" };
+  if (!customer.email) delete customer.email;
   if (!/^[6-9]\d{9}$/.test(normalisePhone(customer.phone))) return { error: "Enter a 10 digit mobile number.", field: "phone" };
   if (customer.address.length < 6) return { error: "Enter the full delivery address.", field: "address" };
   if (customer.city.length < 2) return { error: "Enter the city.", field: "city" };

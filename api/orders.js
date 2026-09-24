@@ -8,7 +8,7 @@
 import { storeReady, overLimit, clientIp } from "./_lib/store.js";
 import { buildOrder, nextOrderNo, saveOrder } from "./_lib/orders.js";
 import { paymentsReady, publicKeyId, createRazorpayOrder } from "./_lib/razorpay.js";
-import { sendOrderAlert } from "./_lib/email.js";
+import { sendOrderAlert, sendOrderConfirmation } from "./_lib/email.js";
 import { json } from "./_lib/auth.js";
 
 export async function POST(request) {
@@ -32,7 +32,10 @@ export async function POST(request) {
     if (order.method !== "cod") order.payment.razorpayOrderId = await createRazorpayOrder(order);
     await saveOrder(order, true);
 
-    if (order.method === "cod") await sendOrderAlert(order, new URL(request.url).origin);
+    if (order.method === "cod") {
+      const site = new URL(request.url).origin;
+      await Promise.all([sendOrderAlert(order, site), sendOrderConfirmation(order, site)]);
+    }
 
     return json({
       order,
