@@ -167,7 +167,7 @@ The page ships a full head (title, description, canonical, Open Graph, Twitter c
 - `index.html`: the canonical link, `og:url`, `og:image`, `twitter:image` and the JSON-LD block
 - `robots.txt`: the `Sitemap:` line
 
-**Analytics.** The storefront pages load Vercel Web Analytics (`/_vercel/insights/script.js`). It counts page views without cookies, and the admin pages don't load it. It starts collecting once Analytics is enabled on the project's Analytics tab in Vercel. Until then the script returns 404, which is harmless.
+**Analytics and Speed Insights.** The storefront pages load Vercel Web Analytics (`/_vercel/insights/script.js`), which counts page views without cookies, and Speed Insights (`/_vercel/speed-insights/script.js`), which measures real visitors' load times (Core Web Vitals). The admin pages load neither. Each starts collecting once it is enabled on its tab in the Vercel project, followed by a redeploy. Until then its script returns 404, which is harmless.
 
 **No review markup, deliberately.** The testimonials on the page are written sample content. Marking invented reviews up as `Review`/`AggregateRating` is structured-data spam and can earn a Google manual action, so the JSON-LD carries none. Add it only when you have real, verifiable reviews.
 

@@ -118,6 +118,9 @@ function page({ base, url, title, description, image, imageAlt, jsonLd, body, bo
   <!-- Vercel Web Analytics: page views only, no cookies. Enable it under the project's Analytics tab. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
+  <!-- Vercel Speed Insights: real visitors' load times. Enable it under the project's Speed Insights tab. -->
+  <script>window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };</script>
+  <script defer src="/_vercel/speed-insights/script.js"></script>
   <link rel="stylesheet" href="${base}vendor/lenis/lenis.css" />
   <link rel="stylesheet" href="${base}styles.css" />
 ${jsonLd.map(ldScript).join("\n")}
