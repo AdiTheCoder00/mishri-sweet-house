@@ -5,6 +5,5 @@ Allow: /
 Disallow: /compare.html
 Disallow: /admin.html
 Disallow: /admin-login.html
-Disallow: /images/_orig/
 
-Sitemap: https://mishrisweethouse.example/sitemap.xml
+Sitemap: https://mishri-sweet-house.vercel.app/sitemap.xml

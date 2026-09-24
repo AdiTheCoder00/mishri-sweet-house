@@ -19,9 +19,9 @@
 const fs = require("fs");
 const path = require("path");
 
-/* Replace before publishing. .example is IETF-reserved so it can never
-   collide with a real domain. Also update robots.txt and index.html. */
-const SITE = "https://mishrisweethouse.example";
+/* The site's public address, used for canonical links, Open Graph tags,
+   structured data and the sitemap. Also in index.html and robots.txt. */
+const SITE = "https://mishri-sweet-house.vercel.app";
 const BRAND = "Mishri Sweet House";
 
 /* ---------------- read the catalogue ---------------- */
@@ -115,6 +115,9 @@ function page({ base, url, title, description, image, imageAlt, jsonLd, body, bo
   <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <!-- Vercel Web Analytics: page views only, no cookies. Enable it under the project's Analytics tab. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
   <link rel="stylesheet" href="${base}vendor/lenis/lenis.css" />
   <link rel="stylesheet" href="${base}styles.css" />
 ${jsonLd.map(ldScript).join("\n")}

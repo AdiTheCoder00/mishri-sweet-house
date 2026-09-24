@@ -106,11 +106,13 @@ Each product carries a `story` field in `products.js` (131–172 words, ~2,250 i
 
 The page ships a full head (title, description, canonical, Open Graph, Twitter card, theme-color, SVG favicon), `robots.txt`, `sitemap.xml`, and JSON-LD structured data describing the shop (`Store`), the site (`WebSite`) and all 15 products with prices in INR.
 
-**The domain is a placeholder.** Every absolute URL uses `https://mishrisweethouse.example` (`.example` is IETF-reserved, so it can never collide with a real site). Before publishing, replace it in:
+**The domain** is `https://mishri-sweet-house.vercel.app`, the project's Vercel address. To move to a custom domain, change it in:
 
-- `index.html` — canonical, `og:url`, `og:image`, `twitter:image`, and the JSON-LD block
-- `robots.txt` — the `Sitemap:` line
-- `sitemap.xml` — the `<loc>`
+- `build.js`: the `SITE` constant, then run `node build.js` to regenerate the product pages and `sitemap.xml`
+- `index.html`: the canonical link, `og:url`, `og:image`, `twitter:image` and the JSON-LD block
+- `robots.txt`: the `Sitemap:` line
+
+**Analytics.** The storefront pages load Vercel Web Analytics (`/_vercel/insights/script.js`). It counts page views without cookies, and the admin pages don't load it. It starts collecting once Analytics is enabled on the project's Analytics tab in Vercel. Until then the script returns 404, which is harmless.
 
 **No review markup, deliberately.** The testimonials on the page are written sample content. Marking invented reviews up as `Review`/`AggregateRating` is structured-data spam and can earn a Google manual action, so the JSON-LD carries none. Add it only when you have real, verifiable reviews.
 
