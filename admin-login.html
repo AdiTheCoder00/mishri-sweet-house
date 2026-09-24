@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in · Shop admin · Mishri Sweet House</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#b4455b" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#101014" media="(prefers-color-scheme: dark)" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body.admin-login { min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+    .login-card {
+      width: 100%; max-width: 400px; padding: 32px 24px; border-radius: var(--r-xl);
+      background: var(--paper); border: 1px solid var(--hair); box-shadow: var(--shadow-soft);
+    }
+    @media (min-width: 480px) { .login-card { padding: 40px 36px; } }
+    .login-card .brand { margin-bottom: 28px; }
+    .login-card h1 { font-size: clamp(1.9rem, 6vw, 2.4rem); letter-spacing: -0.03em; }
+    .login-lede { margin: 8px 0 28px; color: var(--ink-2); }
+    .login-pass { position: relative; }
+    /* styles.css styles text inputs only; match them, whichever type the reveal toggle sets. */
+    .login-pass input {
+      width: 100%; height: 52px; padding: 0 56px 0 16px; border-radius: var(--r-md);
+      border: 1px solid var(--hair-strong); background: var(--paper); color: var(--ink);
+      transition: border-color 0.4s var(--spring), box-shadow 0.4s var(--spring);
+    }
+    .login-pass input:focus { outline: 0; border-color: var(--saffron); box-shadow: 0 0 0 3px rgba(232, 150, 30, 0.25); }
+    .login-reveal { position: absolute; right: 4px; top: 4px; }
+    .login-msg { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 20px; padding: 12px 14px; border-radius: var(--r-md); font-size: 0.925rem; }
+    .login-msg i { font-size: 18px; margin-top: 2px; }
+    .login-msg.is-error { background: var(--pink-soft); color: var(--ink); }
+    .login-msg.is-error i { color: var(--danger); }
+    .login-msg.is-info { background: var(--pista-soft); color: var(--ink); }
+    .login-back { display: inline-flex; align-items: center; gap: 6px; margin-top: 24px; min-height: 44px; color: var(--ink-2); font-size: 0.925rem; }
+    .login-back:hover { color: var(--ink); }
+  </style>
+</head>
+<body class="admin-login">
+  <main class="login-card">
+    <a href="index.html" class="brand" aria-label="Back to the Mishri Sweet House store">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2l2.6 5.4L20 8.2l-4 3.9.9 5.6L12 15l-4.9 2.7.9-5.6-4-3.9 5.4-.8z" fill="currentColor"/></svg></span>
+      <span>Mishri</span>
+    </a>
+    <h1>Shop admin</h1>
+    <p class="login-lede">Sign in to manage the catalogue and orders.</p>
+
+    <div class="login-msg is-error" id="msg-wrong" role="alert" hidden><i class="ph-light ph-warning-circle" aria-hidden="true"></i><span>That password is not right. Try again.</span></div>
+    <div class="login-msg is-error" id="msg-setup" role="alert" hidden><i class="ph-light ph-lock-key" aria-hidden="true"></i><span>Sign-in is not set up yet. Set the <code>ADMIN_PASSWORD</code> environment variable on the server, then redeploy.</span></div>
+    <div class="login-msg is-info" id="msg-out" role="status" hidden><i class="ph-light ph-check-circle" aria-hidden="true"></i><span>You are signed out.</span></div>
+
+    <form method="post" action="/admin/login" id="login-form">
+      <!-- Lets password managers file the password under a name. -->
+      <input type="text" name="username" value="admin" autocomplete="username" hidden />
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="login-pass">
+          <input type="password" id="password" name="password" autocomplete="current-password" required maxlength="256" autofocus />
+          <button type="button" class="icon-btn login-reveal" id="reveal" aria-label="Show password" aria-pressed="false"><i class="ph-light ph-eye" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="login-submit">Sign in</button>
+    </form>
+
+    <a href="index.html" class="login-back"><i class="ph-light ph-arrow-left" aria-hidden="true"></i>Back to the store</a>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+      try {
+        const t = localStorage.getItem("mishri-theme");
+        if (t) document.documentElement.setAttribute("data-theme", t);
+      } catch {}
+      const q = new URLSearchParams(location.search);
+      const show = (id) => { document.getElementById(id).hidden = false; };
+      if (q.get("error") === "wrong") show("msg-wrong");
+      if (q.get("error") === "setup") show("msg-setup");
+      if (q.has("signed-out")) show("msg-out");
+
+      const input = document.getElementById("password");
+      const reveal = document.getElementById("reveal");
+      reveal.addEventListener("click", () => {
+        const showing = input.type === "text";
+        input.type = showing ? "password" : "text";
+        reveal.setAttribute("aria-pressed", String(!showing));
+        reveal.setAttribute("aria-label", showing ? "Show password" : "Hide password");
+        reveal.innerHTML = `<i class="ph-light ${showing ? "ph-eye" : "ph-eye-slash"}" aria-hidden="true"></i>`;
+        input.focus();
+      });
+      document.getElementById("login-form").addEventListener("submit", () => {
+        const btn = document.getElementById("login-submit");
+        btn.disabled = true;
+        btn.textContent = "Signing in";
+      });
+    })();
+  </script>
+</body>
+</html>

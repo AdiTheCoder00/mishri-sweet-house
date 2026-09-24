@@ -3,8 +3,9 @@
    DEMO ONLY. Everything here lives in this browser's localStorage:
    catalogue edits under "mishri-admin" (read by store-settings.js on the
    storefront) and orders under "mishri-orders" (written by app.js at
-   checkout). There is no authentication; a real shop needs a server that
-   owns the catalogue and the orders, and a sign-in in front of this page. */
+   checkout). The page itself sits behind a server-side sign-in (see
+   lib/admin-auth.mjs); a real shop would also keep the catalogue and
+   orders on that server rather than in one browser. */
 (function () {
   "use strict";
 

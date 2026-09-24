@@ -29,12 +29,15 @@
       <div class="admin-bar-actions">
         <a href="index.html" class="admin-store-link"><i class="ph-light ph-storefront" aria-hidden="true"></i><span>View store</span></a>
         <button class="icon-btn" id="theme-toggle" aria-label="Toggle dark mode"></button>
+        <form method="post" action="/admin/logout" class="admin-signout">
+          <button type="submit" class="icon-btn" aria-label="Sign out" title="Sign out"><i class="ph-light ph-sign-out" aria-hidden="true"></i></button>
+        </form>
       </div>
     </div>
   </header>
 
   <main class="wrap admin-main" id="top">
-    <p class="admin-note"><i class="ph-light ph-info" aria-hidden="true"></i>Demo admin. Changes are saved in this browser and show on the storefront opened in this browser. There is no login yet: a live shop needs a server with sign-in before this page goes public.</p>
+    <p class="admin-note"><i class="ph-light ph-info" aria-hidden="true"></i>Demo admin. Sign-in is checked on the server, but the catalogue edits and orders are kept in this browser only, and show on the storefront opened in this browser.</p>
 
     <!-- Overview -->
     <section class="admin-panel" id="panel-overview" aria-labelledby="overview-h">

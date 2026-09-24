@@ -29,6 +29,7 @@ body.admin { padding-bottom: 64px; }
   background: var(--saffron); color: var(--on-saffron); font-size: 0.75rem; font-weight: 700;
 }
 .admin-bar-actions { display: flex; align-items: center; gap: 4px; }
+.admin-signout { display: contents; }
 .admin-store-link {
   display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px;
   border: 1px solid var(--hair-strong); font-weight: 500; transition: border-color 0.4s var(--spring);
