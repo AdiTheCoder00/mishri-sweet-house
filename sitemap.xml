@@ -1,129 +1,151 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://mishri-sweet-house.vercel.app/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/hero.jpg</image:loc></image:image>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/story.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/kaju-katli/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/kaju-katli.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/gulab-jamun/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/gulab-jamun.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/rasmalai/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/rasmalai.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/motichoor-ladoo/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/motichoor-ladoo.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/pista-barfi/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/pista-barfi.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/mysore-pak/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/mysore-pak.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/jalebi/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/jalebi.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/rasgulla/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/rasgulla.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/besan-ladoo/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/besan-ladoo.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/kalakand/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/kalakand.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/moong-dal-halwa/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/moong-dal-halwa.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/sweets/kesar-peda/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/kesar-peda.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/gifts/the-diwali-box/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/box-diwali.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/gifts/the-office-box/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/box-office.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/gifts/the-wedding-favour/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/box-wedding.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/mithai/barfi/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/kaju-katli.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/mithai/syrup/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/gulab-jamun.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/mithai/bengali/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/rasmalai.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/mithai/ladoo/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/motichoor-ladoo.jpg</image:loc></image:image>
   </url>
   <url>
     <loc>https://mishri-sweet-house.vercel.app/mithai/ghee/</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+    <image:image><image:loc>https://mishri-sweet-house.vercel.app/images/mysore-pak.jpg</image:loc></image:image>
   </url>
 </urlset>
