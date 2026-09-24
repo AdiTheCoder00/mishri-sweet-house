@@ -20,6 +20,8 @@ test("generated pages match their sources", () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "mishri-build-"));
   try {
     for (const f of ["build.js", "index.html", "products.js", "policies.js"]) fs.copyFileSync(path.join(ROOT, f), path.join(tmp, f));
+    // Share images and their sizes come from the photographs themselves.
+    fs.cpSync(path.join(ROOT, "images"), path.join(tmp, "images"), { recursive: true });
     execFileSync(process.execPath, ["build.js"], { cwd: tmp, stdio: "pipe" });
 
     const fresh = pagesIn(tmp);

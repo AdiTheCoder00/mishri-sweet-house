@@ -441,7 +441,7 @@
               ${wishButton(p.id, p.name)}
             </div>
             <div class="product-body">
-              <button class="product-name" data-view>${highlight(p.name)}</button>
+              <a class="product-name" href="${escapeHtml(p.page)}" data-view>${highlight(p.name)}</a>
               <div class="product-meta">${escapeHtml(p.category)} · ${escapeHtml(p.weight)}${serves ? " · " + serves : ""}</div>
               <div class="product-foot">
                 <span class="product-price">${inr(p.price)}</span>
@@ -512,7 +512,13 @@
     if (!card) return;
     if (e.target.closest("[data-add]")) addToCart(card.dataset.id);
     else if (e.target.closest("[data-wish]")) toggleWish(card.dataset.id);
-    else if (e.target.closest("[data-view]")) openProduct(card.dataset.id);
+    else if (e.target.closest("[data-view]")) {
+      // The name is a real link to the sweet's own page, for search engines and
+      // for opening in a new tab. A plain click keeps the quick view.
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      e.preventDefault();
+      openProduct(card.dataset.id);
+    }
   });
 
   $("#empty-clear-search").addEventListener("click", () => { searchInput.value = ""; searchInput.dispatchEvent(new Event("input")); });
@@ -567,7 +573,7 @@
         ${wishButton(b.id, b.name)}
         <span class="bento-note">Contents shown</span>
         <div class="bento-body">
-          <h3>${escapeHtml(b.name)}</h3>
+          <h3><a href="${escapeHtml(b.page)}">${escapeHtml(b.name)}</a></h3>
           <p>${escapeHtml(b.desc)}</p>
           <div class="bento-foot">
             <span class="price">${inr(b.price)} <small>/ ${escapeHtml(b.weight)}</small></span>
@@ -615,6 +621,7 @@
         <p class="desc">${escapeHtml(p.desc)}</p>
         <p class="product-meta">${escapeHtml(p.weight)}${serves ? " · " + serves : ""}</p>
         <div class="price">${inr(p.price)}</div>
+        ${p.page ? `<a class="modal-more" href="${escapeHtml(p.page)}">How we make it, storage and delivery</a>` : ""}
         <div class="modal-actions">
           <div class="qty" aria-label="Quantity">
             <button type="button" data-dec aria-label="Decrease quantity"><i class="ph-light ph-minus"></i></button>
