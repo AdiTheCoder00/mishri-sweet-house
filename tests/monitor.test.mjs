@@ -38,6 +38,17 @@ test("builds an envelope Sentry accepts, without the page's query string", () =>
   assert.equal(core.eventFor("plain", { message: "Checkout" }).message.formatted, "Checkout: plain");
 });
 
+test("blanks email addresses and mobile numbers quoted in error text", () => {
+  const leaky = new Error("Resend 422: asha.v+orders@gmail.com is invalid; call +91 98765 43210 or 09876543210, alt 9876543210");
+  const event = core.eventFor(leaky, { message: "order for ravi@example.in failed", extra: { error: "sent to meera@x.co.in", body: { phone: "91-98765-43210" }, total: 1547 } });
+  const text = JSON.stringify(event);
+  for (const secret of ["asha", "ravi@", "meera", "98765", "43210", "9876543210"]) assert.ok(!text.includes(secret), `leaks ${secret}: ${text}`);
+  assert.equal(event.exception.values[0].value, "Resend 422: [email] is invalid; call [phone] or [phone], alt [phone]");
+  assert.equal(event.extra.total, 1547, "numbers that aren't phones are kept");
+  assert.equal(core.scrub("Order MSH-100042 for ₹1547 at 1727150000000"), "Order MSH-100042 for ₹1547 at 1727150000000");
+  assert.match(core.eventFor("x", { tags: { who: "a@b.in" } }).tags.who, /^\[email\]$/);
+});
+
 test("off without SENTRY_DSN: nothing published, nothing sent", async () => {
   unsetEnv("SENTRY_DSN");
   assert.match(await (await store.GET(req("/api/store"))).text(), /"sentryDsn":""/);

@@ -216,7 +216,12 @@ Sentry emails you when something breaks, so you hear about a failing checkout fr
 1. Sign up at [sentry.io](https://sentry.io). The free Developer plan covers a shop this size (5,000 errors a month).
 2. Create a project and choose the platform **Browser JavaScript**. Skip Sentry's install instructions: the site already has its own small reporter (`monitor.js`) instead of Sentry's SDK.
 3. Copy the project's **DSN** (Settings → Client Keys), which looks like `https://abc123…@o123….ingest.sentry.io/456…`. Set it as `SENTRY_DSN` in Vercel and redeploy.
-4. New projects email you on every *new* kind of problem by default. To change that, go to **Alerts**.
+4. Protect the quota. The DSN has to be public for browsers to report, so someone could send junk to it. Two Sentry settings stop that:
+   - **Settings → Projects → your project → Security & Privacy → Allowed Domains**: replace `*` with your site's domain, e.g. `mishri-sweet-house.vercel.app` (add your custom domain later). Browsers on other sites are then refused. Reports from Vercel's servers carry no browser origin, so they still get through.
+   - **Settings → Projects → your project → Client Keys (DSN) → Configure → Rate Limiting**: e.g. 60 errors per minute. A flood then stops at the limit instead of using up the month.
+
+   Spike protection, on by default, also caps sudden bursts. The pages themselves send at most 10 reports per page view and never repeat an identical error.
+5. New projects email you on every *new* kind of problem by default. To change that, go to **Alerts**.
 
 What gets reported:
 
@@ -226,7 +231,7 @@ What gets reported:
 | The server | Any `api/` route that fails (orders, payments, tracking, admin, sign-ups) | error |
 | The server | Order alerts, customer confirmations, dispatch notices or announcements that Resend refused | warning |
 
-Reports carry the error, where it happened, the page and the browser type. They never include form contents, names, phone numbers, addresses or order contents, and page addresses are sent without their query string. The DSN is public by design: pages need it to report, and it only lets anyone *send* reports to the project, not read them. The privacy policy lists Sentry among the shop's service providers.
+Reports carry the error, where it happened, the page and the browser type. They never include form contents, names, phone numbers, addresses or order contents, and page addresses are sent without their query string. Error text sometimes quotes what a library was handed, so `monitor.js` blanks any email address or mobile number inside it (`[email]`, `[phone]`) before sending. The DSN is public by design: pages need it to report, and it only lets anyone *send* reports to the project, not read them. The privacy policy lists Sentry among the shop's service providers.
 
 To check it works: after deploying, open the site, then open the browser console and run `setTimeout(() => { throw new Error("Sentry test") })`. The error appears in Sentry within a minute.
 

@@ -4,7 +4,8 @@
 
    Off until SENTRY_DSN is set in Vercel. Rather than Sentry's 75 KB SDK,
    this sends Sentry's plain envelope format itself: the error, its stack,
-   the page, and a few tags. Never form contents, names, phones or addresses.
+   the page, and a few tags. Never form contents, names, phones or addresses;
+   email addresses and phone numbers quoted inside error text are blanked.
 
    One file, two users:
      pages   load it after /api/store; it reads window.MISHRI_STORE.sentryDsn
@@ -36,6 +37,18 @@
     return frames.reverse(); // Sentry lists the outermost call first.
   }
 
+  /* Error text can quote whatever a library was handed, so email addresses
+     and Indian mobile numbers are blanked before anything leaves. (No
+     lookbehind in these patterns: older Safari can't parse it.) */
+  const EMAIL = /[^\s@<>()[\]"',;:]+@[^\s@<>()[\]"',;:]+\.[a-z]{2,}/gi;
+  const PHONE = /(^|[^\d])((?:\+|00)?(?:91[\s-]?)?0?[6-9]\d{4}[\s-]?\d{5})(?!\d)/g;
+  function scrub(value) {
+    if (value == null || typeof value === "number" || typeof value === "boolean") return value;
+    const text = typeof value === "string" ? value : JSON.stringify(value);
+    return text.replace(EMAIL, "[email]").replace(PHONE, "$1[phone]");
+  }
+  const scrubAll = (obj) => Object.fromEntries(Object.entries(obj || {}).map(([k, v]) => [k, scrub(v)]));
+
   // An Error (or anything thrown) or a plain message becomes one Sentry event.
   function eventFor(problem, opts) {
     const o = opts || {};
@@ -45,16 +58,16 @@
       platform: o.platform || "javascript",
       level: o.level || "error",
       environment: o.environment || "production",
-      tags: Object.assign({}, o.tags),
-      extra: Object.assign({}, o.extra),
+      tags: scrubAll(o.tags),
+      extra: scrubAll(o.extra),
     };
     if (o.url) event.request = { url: String(o.url).split("?")[0] };
     if (problem instanceof Error || (problem && typeof problem === "object" && "stack" in problem)) {
       const frames = framesFrom(problem.stack);
-      event.exception = { values: [{ type: problem.name || "Error", value: String(problem.message || "").slice(0, 500), stacktrace: frames.length ? { frames } : undefined }] };
-      if (o.message) event.extra.where = o.message;
+      event.exception = { values: [{ type: problem.name || "Error", value: scrub(String(problem.message || "")).slice(0, 500), stacktrace: frames.length ? { frames } : undefined }] };
+      if (o.message) event.extra.where = scrub(o.message);
     } else {
-      event.message = { formatted: String(o.message ? `${o.message}: ${problem}` : problem).slice(0, 500) };
+      event.message = { formatted: scrub(String(o.message ? `${o.message}: ${problem}` : problem)).slice(0, 500) };
     }
     return event;
   }
@@ -69,7 +82,7 @@
     };
   }
 
-  const core = { parseDsn, framesFrom, eventFor, envelope };
+  const core = { parseDsn, framesFrom, scrub, eventFor, envelope };
   if (typeof module !== "undefined" && module.exports) { module.exports = core; return; }
 
   /* ---------------- in the browser ---------------- */
