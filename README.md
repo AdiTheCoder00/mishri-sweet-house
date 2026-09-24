@@ -42,7 +42,7 @@ Cart, wishlist and theme persist in `localStorage`. Nothing is charged and no or
 | `serve.js` | Dependency-free static server for local preview |
 | `admin.html`, `admin.js`, `admin.css` | Shop admin: overview, catalogue edits, orders |
 | `admin-login.html` | Sign-in page for the shop admin |
-| `middleware.js`, `lib/admin-auth.mjs` | Server-side password check in front of the admin (Vercel Routing Middleware; `serve.js` runs the same check locally) |
+| `middleware.js` | Server-side password check in front of the admin (Vercel Routing Middleware; `serve.js` runs the same file locally). Kept in one file: Vercel runs it where local imports fail |
 | `store-settings.js` | Applies the admin's catalogue edits on top of `products.js` in the storefront |
 | `smooth-scroll.js` | Lenis smooth scrolling: eased wheel scrolling, section links that glide clear of the header, paused behind drawers and dialogs |
 | `vendor/lenis/` | [Lenis](https://github.com/darkroomengineering/lenis) 1.3.26 (MIT), vendored so the site still needs no build step or extra CDN |
