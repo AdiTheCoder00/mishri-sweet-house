@@ -27,11 +27,10 @@
   <meta name="twitter:description" content="What we collect, why, and who else sees it. Mishri Sweet House, Jaipur." />
   <meta name="twitter:image" content="https://mishri-sweet-house.vercel.app/images/hero.jpg" />
 
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <link rel="preload" href="../../vendor/fonts/switzer-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="../../vendor/fonts/clash-display-600.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="../../vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="../../vendor/phosphor/icons.css" />
   <!-- Vercel Web Analytics: page views only, no cookies. Enable it under the project's Analytics tab. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -156,6 +155,7 @@
             <li>Upstash: stores orders and the festival-box list.</li>
             <li>Razorpay: processes online payments.</li>
             <li>Resend: sends our emails.</li>
+            <li>Sentry: receives a technical report if something on the site breaks, such as the page, your browser type and the error. It does not receive your name, contact details, address or what you ordered.</li>
             <li>Our delivery partners: receive your name, phone number and address to deliver your order.</li>
           </ul>
         </section>
@@ -234,6 +234,7 @@
 
   <script src="../../products.js"></script>
   <script src="../../api/store"></script>
+  <script src="../../monitor.js"></script>
   <script src="../../store-settings.js"></script>
   <script src="../../vendor/lenis/lenis.min.js"></script>
   <script src="../../smooth-scroll.js"></script>

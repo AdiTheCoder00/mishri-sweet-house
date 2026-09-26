@@ -5,6 +5,17 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const inr = (n) => "₹" + n.toLocaleString("en-IN");
+  // Photos come in 200, 400 and 600px copies next to the 800px original
+  // (tools/resize-images.mjs); the browser picks the smallest that is sharp.
+  const sized = (img, w) => img.replace(/\.webp$/, `-${w}.webp`);
+  const imgSrc = (img, sizes) =>
+    /\.webp$/.test(img)
+      ? `src="${img}" srcset="${[200, 400, 600].map((w) => `${sized(img, w)} ${w}w`).join(", ")}, ${img} 800w" sizes="${sizes}"`
+      : `src="${img}"`;
+  const thumbSrc = (img) => (/\.webp$/.test(img) ? sized(img, 200) : img);
+  // Also used for the hero strip, which shows the same sweets: one size
+  // serves both, so a phone downloads each photo once.
+  const CARD_SIZES = "(min-width: 1100px) 300px, (min-width: 768px) 33vw, 50vw";
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   const ALL_ITEMS = [...PRODUCTS, ...GIFT_BOXES];
@@ -241,7 +252,7 @@
       const atMin = line.qty <= minQty(p.id);
       return `
         <div class="cart-item" data-id="${p.id}">
-          <img src="${p.img}" alt="" width="72" height="72" loading="lazy" decoding="async" />
+          <img src="${thumbSrc(p.img)}" alt="" width="72" height="72" loading="lazy" decoding="async" />
           <div>
             <div class="cart-item-name">${escapeHtml(p.name)}</div>
             <div class="cart-item-meta">${escapeHtml(p.weight)} · ${inr(p.price)} each</div>
@@ -347,7 +358,7 @@
       const p = findItem(id);
       return `
         <div class="wish-item" data-id="${p.id}">
-          <img src="${p.img}" alt="" width="72" height="72" loading="lazy" />
+          <img src="${thumbSrc(p.img)}" alt="" width="72" height="72" loading="lazy" />
           <div>
             <div class="wish-item-name">${escapeHtml(p.name)}</div>
             <div class="wish-item-meta">${escapeHtml(p.weight)} · ${inr(p.price)}</div>
@@ -425,7 +436,7 @@
         <div class="bezel">
           <div class="bezel-core">
             <div class="product-media">
-              <img src="${p.img}" alt="${escapeHtml(p.name)}" width="800" height="800" loading="lazy" decoding="async" />
+              <img ${imgSrc(p.img, CARD_SIZES)} alt="${escapeHtml(p.name)}" width="800" height="800" loading="lazy" decoding="async" />
               ${p.tag ? `<span class="product-tag">${escapeHtml(p.tag)}</span>` : ""}
               ${wishButton(p.id, p.name)}
             </div>
@@ -556,7 +567,7 @@
       <div class="bento-cell" data-id="${b.id}">
         <div class="bezel">
           <div class="bezel-core">
-            <img src="${b.img}" alt="${escapeHtml(b.name)}" width="800" height="800" loading="lazy" decoding="async" />
+            <img ${imgSrc(b.img, "(min-width: 900px) 60vw, 100vw")} alt="${escapeHtml(b.name)}" width="800" height="800" loading="lazy" decoding="async" />
           </div>
         </div>
         ${wishButton(b.id, b.name)}
@@ -604,7 +615,7 @@
     $("#product-modal-body").dataset.id = p.id;
     const serves = typeof SERVES !== "undefined" ? SERVES[p.weight] : "";
     $("#product-modal-body").innerHTML = `
-      <img src="${p.img}" alt="${escapeHtml(p.name)}" width="800" height="800" decoding="async" />
+      <img ${imgSrc(p.img, "(min-width: 768px) 460px, 100vw")} alt="${escapeHtml(p.name)}" width="800" height="800" decoding="async" />
       <div class="modal-copy">
         <h2>${escapeHtml(p.name)}</h2>
         <p class="desc">${escapeHtml(p.desc)}</p>
@@ -687,7 +698,7 @@
     if (hasChilled()) items.push(["ph-snowflake", "Rasmalai travels in an insulated box with ice packs. Refrigerate on arrival."]);
     items.push(["ph-arrows-counter-clockwise", "Arrived broken or late? We replace it free, no questions."]);
     items.push(["ph-chat-circle-text", `Questions? <a href="https://wa.me/918744667777" target="_blank" rel="noreferrer">WhatsApp us on +91 87446 67777</a>.`]);
-    $("#assure").innerHTML = items.map(([icon, text]) => `<li><i class="ph ${icon}" aria-hidden="true"></i><span>${text}</span></li>`).join("");
+    $("#assure").innerHTML = items.map(([icon, text]) => `<li><i class="ph-light ${icon}" aria-hidden="true"></i><span>${text}</span></li>`).join("");
   }
 
   $("#checkout-open").addEventListener("click", () => {
@@ -876,14 +887,20 @@
   // than creating a second order, as long as the details are unchanged.
   let pendingPayment = null;
 
+  // Error reports to Sentry via monitor.js, when the shop has switched them on.
+  const monitor = (message, opts) => window.MishriMonitor && window.MishriMonitor.report(message, opts);
+
   async function postJson(url, body) {
     try {
       const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const data = await res.json().catch(() => ({}));
       // No database connected, or no server behind these pages at all.
       const noServer = (res.status === 503 && data.error === "storage-not-configured") || res.status === 404 || res.status === 405;
+      // A customer's typo is not news; the shop failing to take an order is.
+      if (res.status >= 500 && !noServer) monitor(`Checkout: ${url} answered ${res.status}`, { tags: { checkout: "server" }, extra: { error: data.error } });
       return res.ok ? data : { error: data.error || "Something went wrong. Please try again.", field: data.field, noServer };
-    } catch {
+    } catch (e) {
+      monitor(`Checkout: could not reach ${url}`, { level: "warning", tags: { checkout: "network" }, extra: { error: String(e) } });
       return { error: "We could not reach the shop. Check your connection and try again." };
     }
   }
@@ -944,6 +961,7 @@
   async function openRazorpay({ order, razorpay }) {
     let Razorpay;
     try { Razorpay = await loadRazorpay(); } catch {
+      monitor("Checkout: Razorpay's payment page did not load", { level: "warning", tags: { checkout: "razorpay" } });
       liveFailed({ error: "The payment page did not load. Check your connection and press Pay again." });
       return;
     }
@@ -1036,7 +1054,7 @@
     $("#hero-strip").innerHTML = picks.map((p, i) => `
       <button class="tile-arch" data-id="${p.id}" aria-label="View ${escapeHtml(p.name)}">
         <div class="arch">
-          <img src="${p.img}" alt="" width="400" height="560" decoding="async" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} />
+          <img ${imgSrc(p.img, CARD_SIZES)} alt="" width="400" height="560" decoding="async" ${i === 0 ? 'fetchpriority="high"' : 'loading="lazy"'} />
         </div>
         <span class="tile-cap"><span class="stamp">${BATCH_TIMES[i]}</span>${escapeHtml(p.name)}</span>
       </button>`).join("");

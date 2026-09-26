@@ -8,6 +8,7 @@ import { orderForRazorpay, markPaid } from "../_lib/orders.js";
 import { webhookSignatureValid } from "../_lib/razorpay.js";
 import { sendOrderAlert, sendOrderConfirmation } from "../_lib/email.js";
 import { json } from "../_lib/auth.js";
+import { reportError } from "../_lib/monitor.js";
 
 export async function POST(request) {
   const raw = await request.text();
@@ -31,7 +32,7 @@ export async function POST(request) {
     }
     return json({ ok: true });
   } catch (e) {
-    console.error("webhook failed", e);
+    await reportError("webhook failed", e, request);
     // 500 makes Razorpay retry later.
     return json({ error: "webhook failed" }, 500);
   }

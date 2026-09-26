@@ -41,7 +41,9 @@ test("every internal link on a generated page points at a real file", () => {
   const broken = [];
   for (const f of ["index.html", ...pagesIn(ROOT)]) {
     const html = fs.readFileSync(path.join(ROOT, f), "utf8");
-    for (const [, href] of html.matchAll(/(?:href|src)="([^"#?]+)[^"]*"/g)) {
+    const refs = [...html.matchAll(/(?:href|src)="([^"#?]+)[^"]*"/g)].map((m) => m[1]);
+    for (const [, set] of html.matchAll(/(?:srcset|imagesrcset)="([^"]+)"/g)) refs.push(...set.split(",").map((c) => c.trim().split(/\s+/)[0]));
+    for (const href of refs) {
       if (/^(https?:|mailto:|tel:|data:|\/_vercel\/)/.test(href)) continue;
       let target = href.startsWith("/") ? path.join(ROOT, href) : path.resolve(path.dirname(path.join(ROOT, f)), href);
       if (href.endsWith("/")) target = path.join(target, "index.html");
@@ -51,4 +53,29 @@ test("every internal link on a generated page points at a real file", () => {
     }
   }
   assert.deepEqual(broken, []);
+});
+
+test("every photo has the smaller copies srcset offers (run tools/resize-images.mjs)", () => {
+  const dir = path.join(ROOT, "images");
+  const originals = fs.readdirSync(dir).filter((f) => f.endsWith(".webp") && !/-\d+\.webp$/.test(f));
+  const missing = originals.flatMap((f) => [200, 400, 600].map((w) => f.replace(/\.webp$/, `-${w}.webp`)).filter((c) => !fs.existsSync(path.join(dir, c))));
+  assert.deepEqual(missing, []);
+});
+
+test("every icon the site uses is in the self-hosted icon font (run tools/build-icons.py)", () => {
+  const css = fs.readFileSync(path.join(ROOT, "vendor/phosphor/icons.css"), "utf8");
+  const sources = ["index.html", "admin.html", "admin-login.html", "app.js", "page.js", "admin.js", "track.js", "build.js"];
+  const used = new Set(sources.flatMap((f) => fs.readFileSync(path.join(ROOT, f), "utf8").match(/\bph-[a-z0-9]+(?:-[a-z0-9]+)*/g) || []));
+  const missing = [...used].filter((n) => !/^ph-(light|fill|bold|thin|duotone)$/.test(n))
+    .flatMap((n) => ["light", "fill"].filter((w) => !css.includes(`.ph-${w}.${n}:before`)).map((w) => `${w} ${n}`));
+  assert.deepEqual(missing, []);
+});
+
+test("pages load fonts and icons from the site, not other services", () => {
+  const external = [];
+  for (const f of ["index.html", "admin.html", "admin-login.html", ...pagesIn(ROOT)]) {
+    const html = fs.readFileSync(path.join(ROOT, f), "utf8");
+    for (const [, url] of html.matchAll(/<link[^>]+href="(https?:[^"]+)"/g)) if (!/rel="canonical"/.test(url)) external.push(`${f}: ${url}`);
+  }
+  assert.deepEqual(external.filter((e) => /fontshare|unpkg|jsdelivr|googleapis/.test(e)), []);
 });

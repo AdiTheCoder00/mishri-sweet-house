@@ -13,6 +13,7 @@
    Nothing here throws: a failed email must never fail an order. The last
    failure is kept (see lastEmailError) so the admin can show the reason. */
 import { redis, pipeline, storeReady } from "./store.js";
+import { report } from "./monitor.js";
 
 const inr = (n) => "₹" + Number(n).toLocaleString("en-IN");
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -56,6 +57,9 @@ function explain(status, message) {
 }
 
 async function recordFailure(context, reason) {
+  // Sentry too, except for the admin's own test email: they are looking at the result.
+  const kind = String(context).split(" ")[0];
+  if (kind !== "test") await report(reason, { level: "warning", message: `Email failed (${kind})`, tags: { email: kind }, extra: { context } });
   if (!storeReady()) return;
   try { await redis("SET", LAST_ERROR_KEY, JSON.stringify({ at: new Date().toISOString(), context, reason })); } catch {}
 }

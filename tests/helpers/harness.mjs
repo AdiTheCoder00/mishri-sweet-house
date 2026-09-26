@@ -3,6 +3,7 @@
      Upstash   an in-memory store (mock-upstash.mjs)
      Resend    captured in `emails`; `resend.mode` makes it fail like the real one
      Razorpay  order creation captured in `razorpayOrders`
+     Sentry    error reports to SENTRY_DSN captured in `sentryEvents`
 
    Each test file runs in its own process, so each gets a fresh store. */
 import { createRedis } from "./mock-upstash.mjs";
@@ -16,6 +17,8 @@ export const db = createRedis();
 export const emails = [];
 export const razorpayOrders = [];
 export const resend = { mode: "ok", failBatchAfter: Infinity, batchCalls: 0 };
+export const sentryEvents = [];
+export const SENTRY_DSN = "https://abc123@o1.ingest.sentry.io/42";
 
 const RESEND_ERRORS = {
   badkey: [401, { statusCode: 401, message: "API key is invalid", name: "validation_error" }],
@@ -42,6 +45,11 @@ export async function fakeFetch(url, init = {}) {
     const b = JSON.parse(init.body);
     razorpayOrders.push({ auth: init.headers.Authorization, ...b });
     return Response.json({ id: "order_T" + razorpayOrders.length, amount: b.amount });
+  }
+  if (u.startsWith("https://o1.ingest.sentry.io/api/42/envelope/")) {
+    const [header, item, event] = String(init.body).split("\n").map((l) => JSON.parse(l));
+    sentryEvents.push({ url: u, header, item, event });
+    return new Response("{}", { status: 200 });
   }
   if (u.startsWith("http://127.0.0.1") || u.startsWith("http://localhost")) return realFetch(url, init);
   throw new Error("test tried to reach the internet: " + u);

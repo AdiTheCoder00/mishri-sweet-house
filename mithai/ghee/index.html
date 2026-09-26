@@ -27,11 +27,10 @@
   <meta name="twitter:description" content="Slow-cooked in desi ghee. Rich, and they keep well. 3 ghee sweets made fresh each morning in Jaipur: Mysore Pak, Kalakand, Moong Dal Halwa." />
   <meta name="twitter:image" content="https://mishri-sweet-house.vercel.app/images/mysore-pak.jpg" />
 
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <link rel="preload" href="../../vendor/fonts/switzer-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="../../vendor/fonts/clash-display-600.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="../../vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="../../vendor/phosphor/icons.css" />
   <!-- Vercel Web Analytics: page views only, no cookies. Enable it under the project's Analytics tab. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -162,7 +161,7 @@
             <div class="bezel"><div class="bezel-core">
               <a class="plp-link" href="../../sweets/mysore-pak/">
                 <div class="product-media">
-                  <img src="../../images/mysore-pak.webp" alt="Mysore Pak" width="800" height="800" loading="lazy" />
+                  <img src="../../images/mysore-pak.webp" srcset="../../images/mysore-pak-200.webp 200w, ../../images/mysore-pak-400.webp 400w, ../../images/mysore-pak-600.webp 600w, ../../images/mysore-pak.webp 800w" sizes="(min-width: 1100px) 300px, (min-width: 768px) 33vw, 50vw" alt="Mysore Pak" width="800" height="800" loading="lazy" />
                   
                 </div>
                 <div class="product-body">
@@ -177,7 +176,7 @@
             <div class="bezel"><div class="bezel-core">
               <a class="plp-link" href="../../sweets/kalakand/">
                 <div class="product-media">
-                  <img src="../../images/kalakand.webp" alt="Kalakand" width="800" height="800" loading="lazy" />
+                  <img src="../../images/kalakand.webp" srcset="../../images/kalakand-200.webp 200w, ../../images/kalakand-400.webp 400w, ../../images/kalakand-600.webp 600w, ../../images/kalakand.webp 800w" sizes="(min-width: 1100px) 300px, (min-width: 768px) 33vw, 50vw" alt="Kalakand" width="800" height="800" loading="lazy" />
                   
                 </div>
                 <div class="product-body">
@@ -192,7 +191,7 @@
             <div class="bezel"><div class="bezel-core">
               <a class="plp-link" href="../../sweets/moong-dal-halwa/">
                 <div class="product-media">
-                  <img src="../../images/moong-dal-halwa.webp" alt="Moong Dal Halwa" width="800" height="800" loading="lazy" />
+                  <img src="../../images/moong-dal-halwa.webp" srcset="../../images/moong-dal-halwa-200.webp 200w, ../../images/moong-dal-halwa-400.webp 400w, ../../images/moong-dal-halwa-600.webp 600w, ../../images/moong-dal-halwa.webp 800w" sizes="(min-width: 1100px) 300px, (min-width: 768px) 33vw, 50vw" alt="Moong Dal Halwa" width="800" height="800" loading="lazy" />
                   <span class="product-tag">Winter special</span>
                 </div>
                 <div class="product-body">
@@ -258,6 +257,7 @@
 
   <script src="../../products.js"></script>
   <script src="../../api/store"></script>
+  <script src="../../monitor.js"></script>
   <script src="../../store-settings.js"></script>
   <script src="../../vendor/lenis/lenis.min.js"></script>
   <script src="../../smooth-scroll.js"></script>

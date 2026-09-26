@@ -10,6 +10,7 @@ import { buildOrder, nextOrderNo, saveOrder } from "./_lib/orders.js";
 import { paymentsReady, publicKeyId, createRazorpayOrder } from "./_lib/razorpay.js";
 import { sendOrderAlert, sendOrderConfirmation } from "./_lib/email.js";
 import { json } from "./_lib/auth.js";
+import { reportError } from "./_lib/monitor.js";
 
 export async function POST(request) {
   if (!storeReady()) return json({ error: "storage-not-configured" }, 503);
@@ -47,7 +48,7 @@ export async function POST(request) {
       },
     }, 201);
   } catch (e) {
-    console.error("order failed", e);
+    await reportError("order failed", e, request);
     return json({ error: "We could not place the order just now. Please try again, or message us on WhatsApp." }, 500);
   }
 }

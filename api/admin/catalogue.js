@@ -7,6 +7,7 @@
 import { storeReady, redis, KEYS, readCatalogue } from "../_lib/store.js";
 import { cleanSettings } from "../_lib/catalogue.js";
 import { adminGuard, json } from "../_lib/auth.js";
+import { reportError } from "../_lib/monitor.js";
 
 export async function GET(request) {
   const denied = await adminGuard(request, storeReady);
@@ -14,7 +15,7 @@ export async function GET(request) {
   try {
     return json(await readCatalogue());
   } catch (e) {
-    console.error("read catalogue failed", e);
+    await reportError("read catalogue failed", e, request);
     return json({ error: "The catalogue could not be loaded." }, 500);
   }
 }
@@ -29,7 +30,7 @@ export async function PUT(request) {
     await redis("SET", KEYS.catalogue, JSON.stringify(settings));
     return json(settings);
   } catch (e) {
-    console.error("save catalogue failed", e);
+    await reportError("save catalogue failed", e, request);
     return json({ error: "The catalogue could not be saved." }, 500);
   }
 }

@@ -30,11 +30,10 @@
   <meta name="twitter:description" content="Khoya dumplings fried slow and soaked in rose and cardamom syrup. Served warm at the counter. ₹349 for 12 pieces, serves 6. Fresh from our Jaipur kitchen." />
   <meta name="twitter:image" content="https://mishri-sweet-house.vercel.app/images/gulab-jamun.jpg" />
 
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <link rel="preload" href="../../vendor/fonts/switzer-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="../../vendor/fonts/clash-display-600.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="../../vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="../../vendor/phosphor/icons.css" />
   <!-- Vercel Web Analytics: page views only, no cookies. Enable it under the project's Analytics tab. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -196,7 +195,7 @@
       </nav>
         <div class="pdp-grid">
           <figure class="pdp-media">
-            <img src="../../images/gulab-jamun.webp" alt="Gulab Jamun: Khoya dumplings fried slow and soaked in rose and cardamom syrup" width="800" height="800" fetchpriority="high" />
+            <img src="../../images/gulab-jamun.webp" srcset="../../images/gulab-jamun-200.webp 200w, ../../images/gulab-jamun-400.webp 400w, ../../images/gulab-jamun-600.webp 600w, ../../images/gulab-jamun.webp 800w" sizes="(min-width: 1200px) 560px, (min-width: 900px) 45vw, 100vw" alt="Gulab Jamun: Khoya dumplings fried slow and soaked in rose and cardamom syrup" width="800" height="800" fetchpriority="high" />
           </figure>
 
           <div class="pdp-copy">
@@ -231,7 +230,7 @@
           <h2>More Syrup</h2>
           <ul>
             <li><a href="../../sweets/jalebi/">
-              <img src="../../images/jalebi.webp" alt="" width="200" height="200" loading="lazy" />
+              <img src="../../images/jalebi.webp" srcset="../../images/jalebi-200.webp 200w, ../../images/jalebi-400.webp 400w, ../../images/jalebi-600.webp 600w, ../../images/jalebi.webp 800w" sizes="200px" alt="" width="200" height="200" loading="lazy" />
               <span>Jalebi</span><span class="rel-price">₹249</span>
             </a></li>
           </ul>
@@ -290,6 +289,7 @@
 
   <script src="../../products.js"></script>
   <script src="../../api/store"></script>
+  <script src="../../monitor.js"></script>
   <script src="../../store-settings.js"></script>
   <script src="../../vendor/lenis/lenis.min.js"></script>
   <script src="../../smooth-scroll.js"></script>

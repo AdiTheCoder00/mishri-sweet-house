@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { ROOT } from "./helpers/harness.mjs";
+import { ROOT, SENTRY_DSN } from "./helpers/harness.mjs";
 
 let chromium;
 try {
@@ -46,7 +46,7 @@ async function newPage(options = {}) {
 before(async () => {
   if (skip) return;
   browser = await chromium.launch();
-  [DEMO, LIVE] = await Promise.all([startServer(5301, { STORAGE: "0" }), startServer(5302, { STORAGE: "1" })]);
+  [DEMO, LIVE] = await Promise.all([startServer(5301, { STORAGE: "0" }), startServer(5302, { STORAGE: "1", SENTRY_DSN })]);
 });
 
 after(async () => {
@@ -140,4 +140,27 @@ test("live shop: place an order, then track it as the admin moves it along", { s
   await page.waitForFunction(() => /Being made fresh/.test(document.querySelector('.track-step[aria-current="step"]')?.textContent || ""));
   assert.equal(await page.locator(".track-step.is-done").count(), 1);
   assert.deepEqual(pageErrors, []);
+});
+
+test("with Sentry switched on, a script error in the page is reported once", { skip }, async () => {
+  const page = await newPage();
+  const reports = [];
+  await page.context().route("https://o1.ingest.sentry.io/**", (route) => {
+    reports.push(route.request().postData().split("\n").map((l) => JSON.parse(l))[2]);
+    route.fulfill({ status: 200, body: "{}" });
+  });
+  await page.goto(LIVE + "/");
+  assert.equal(await page.evaluate(() => window.MishriMonitor.enabled), true);
+  const before = pageErrors.length;
+  for (let i = 0; i < 2; i++) await page.evaluate(() => setTimeout(() => { throw new Error("boom from the test"); }, 0));
+  await page.waitForTimeout(500);
+  pageErrors.splice(before); // expected, not a failure of the site
+  assert.equal(reports.length, 1, "the same error twice is reported once");
+  assert.equal(reports[0].exception.values[0].value, "boom from the test");
+  assert.equal(reports[0].tags.page, "/");
+  assert.equal(reports[0].request.url, LIVE + "/");
+
+  const demo = await newPage();
+  await demo.goto(DEMO + "/");
+  assert.equal(await demo.evaluate(() => window.MishriMonitor.enabled), false, "off without SENTRY_DSN");
 });

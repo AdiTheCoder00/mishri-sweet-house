@@ -5,6 +5,7 @@ import { getOrder, markPaid } from "../_lib/orders.js";
 import { paymentSignatureValid } from "../_lib/razorpay.js";
 import { sendOrderAlert, sendOrderConfirmation } from "../_lib/email.js";
 import { json } from "../_lib/auth.js";
+import { reportError } from "../_lib/monitor.js";
 
 export async function POST(request) {
   if (!storeReady()) return json({ error: "storage-not-configured" }, 503);
@@ -25,7 +26,7 @@ export async function POST(request) {
     }
     return json({ order: updated || (await getOrder(order.no)) });
   } catch (e) {
-    console.error("verify failed", e);
+    await reportError("verify failed", e, request);
     return json({ error: "The payment could not be confirmed just now. Please message us on WhatsApp." }, 500);
   }
 }

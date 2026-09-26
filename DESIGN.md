@@ -30,7 +30,7 @@ One accent rule: saffron marks the action the visitor should take. Pink is place
 ## Type
 
 - Display: **Clash Display** 500/600/700 (Fontshare). `h1` `clamp(2.6rem, 6.2vw, 5.5rem)` at `-0.035em`, line-height `0.98`; `h2` `clamp(2rem, 4vw, 3.4rem)` at `-0.03em`. Product names, drawer and dialog headings use it at 1.05–2.2rem.
-- Body: **Satoshi** 400/500/700. 16px base, line-height 1.55. Copy measures cap at 40–58ch.
+- Body: **Switzer** 400/500/700 (Satoshi was the original choice; Fontshare now serves Switzer in its place). 16px base, line-height 1.55. Copy measures cap at 40–58ch.
 - Stamps: `.stamp`, 10.5px, weight 700, `letter-spacing: .16em`, uppercase, in a hairline pill. They carry batch times (`05:10`), lot sizes (`5 KG LOTS`) and place (`JAIPUR · SINCE 1962`). This is the only uppercase in the system, and it always carries data, never a section label.
 
 ## Shape and depth

@@ -14,7 +14,7 @@ The shop admin needs a password: `ADMIN_PASSWORD='your password' node serve.js` 
 
 ## The design
 
-Built on Jaipur's own screen grammar rather than the usual premium-DTC template: a cool white ground with Jaipur pink and pista green as page-scale fields, each carrying a jaali (pierced screen) lattice; sweets shown through cusped-arch windows; saffron reserved for the action. Clash Display over Satoshi, one spring easing curve throughout. [DESIGN.md](DESIGN.md) records the full system; [PRODUCT.md](PRODUCT.md) records the product truth behind it.
+Built on Jaipur's own screen grammar rather than the usual premium-DTC template: a cool white ground with Jaipur pink and pista green as page-scale fields, each carrying a jaali (pierced screen) lattice; sweets shown through cusped-arch windows; saffron reserved for the action. Clash Display over Switzer, one spring easing curve throughout. [DESIGN.md](DESIGN.md) records the full system; [PRODUCT.md](PRODUCT.md) records the product truth behind it.
 
 The signature interaction: a jaali screen sits over each sweet and opens when you hover or focus it.
 
@@ -47,6 +47,10 @@ Cart, wishlist and theme persist in `localStorage`. Nothing is charged and no or
 | `middleware.js` | Server-side password check in front of the admin (Vercel Routing Middleware; `serve.js` runs the same file locally). Kept in one file: Vercel runs it where local imports fail |
 | `store-settings.js` | Applies the admin's catalogue edits on top of `products.js` in the storefront |
 | `smooth-scroll.js` | Lenis smooth scrolling: eased wheel scrolling, section links that glide clear of the header, paused behind drawers and dialogs |
+| `monitor.js` | Error reports to Sentry, shared by the pages and `api/_lib/monitor.js`; off until `SENTRY_DSN` is set |
+| `vendor/fonts/` | Clash Display and Switzer (Indian Type Foundry, ITF Free Font License), served from the site. Refresh with the **Vendor fonts** workflow in GitHub Actions (`tools/fetch-fonts.mjs`) |
+| `vendor/phosphor/` | [Phosphor](https://phosphoricons.com) icons (MIT), cut down to the ~45 icons the site uses: 11 KB instead of about 290 KB. After using a new icon, run `python3 tools/build-icons.py` (needs `pip install fonttools brotli`); the tests name any icon that's missing |
+| `images/*-200.webp`, `-400`, `-600` | Smaller copies of each photo for phones and thumbnails. After adding or replacing a photo, run `npm install --no-save sharp && node tools/resize-images.mjs`; the tests fail if a copy is missing |
 | `vendor/lenis/` | [Lenis](https://github.com/darkroomengineering/lenis) 1.3.26 (MIT), vendored so the site still needs no build step or extra CDN |
 | `policies.js` | Text of the policy pages; `build.js` renders it into `policies/<slug>/` |
 | `track.js` | The Track your order page |
@@ -90,6 +94,7 @@ Everything below is set in Vercel under the project's **Settings → Environment
 | `EMAIL_FROM` | Sender for everything, e.g. `Mishri Sweet House <orders@yourdomain.in>`. Turns on emails to customers and the festival-box list | A domain you have verified in Resend (`ALERT_FROM` still works too) |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Turns on UPI and card payments | Razorpay Dashboard → Account & Settings → API Keys |
 | `RAZORPAY_WEBHOOK_SECRET` | Confirms payments even if the customer closes the page | The secret you type when adding the webhook (below) |
+| `SENTRY_DSN` | Emails you when something breaks (below) | sentry.io → your project → Settings → Client Keys (DSN) |
 
 ### 1. Database: Upstash Redis
 
@@ -204,6 +209,32 @@ The shipping, refunds, privacy, terms and contact pages are written from what th
 
 Change `UPDATED` in `policies.js` whenever the wording changes.
 
+### 4. Error alerts: Sentry
+
+Sentry emails you when something breaks, so you hear about a failing checkout from Sentry rather than from an unhappy customer. It works in demo and live mode alike.
+
+1. Sign up at [sentry.io](https://sentry.io). The free Developer plan covers a shop this size (5,000 errors a month).
+2. Create a project and choose the platform **Browser JavaScript**. Skip Sentry's install instructions: the site already has its own small reporter (`monitor.js`) instead of Sentry's SDK.
+3. Copy the project's **DSN** (Settings → Client Keys), which looks like `https://abc123…@o123….ingest.sentry.io/456…`. Set it as `SENTRY_DSN` in Vercel and redeploy.
+4. Protect the quota. The DSN has to be public for browsers to report, so someone could send junk to it. Two Sentry settings stop that:
+   - **Settings → Projects → your project → Security & Privacy → Allowed Domains**: replace `*` with your site's domain, e.g. `mishri-sweet-house.vercel.app` (add your custom domain later). Browsers on other sites are then refused. Reports from Vercel's servers carry no browser origin, so they still get through.
+   - **Settings → Projects → your project → Client Keys (DSN) → Configure → Rate Limiting**: e.g. 60 errors per minute. A flood then stops at the limit instead of using up the month.
+
+   Spike protection, on by default, also caps sudden bursts. The pages themselves send at most 10 reports per page view and never repeat an identical error.
+5. New projects email you on every *new* kind of problem by default. To change that, go to **Alerts**.
+
+What gets reported:
+
+| From | What | Level |
+| --- | --- | --- |
+| Customers' browsers | Script errors on any page; checkout calls the server rejected with a 5xx or could not reach; Razorpay's payment page failing to load | error, or warning for connection problems |
+| The server | Any `api/` route that fails (orders, payments, tracking, admin, sign-ups) | error |
+| The server | Order alerts, customer confirmations, dispatch notices or announcements that Resend refused | warning |
+
+Reports carry the error, where it happened, the page and the browser type. They never include form contents, names, phone numbers, addresses or order contents, and page addresses are sent without their query string. Error text sometimes quotes what a library was handed, so `monitor.js` blanks any email address or mobile number inside it (`[email]`, `[phone]`) before sending. The DSN is public by design: pages need it to report, and it only lets anyone *send* reports to the project, not read them. The privacy policy lists Sentry among the shop's service providers.
+
+To check it works: after deploying, open the site, then open the browser console and run `setTimeout(() => { throw new Error("Sentry test") })`. The error appears in Sentry within a minute.
+
 ## Tests
 
 ```bash
@@ -220,8 +251,9 @@ Needs nothing installed. The tests run the real `api/` routes and `middleware.js
 | `regressions.test.mjs` | Races and edge cases found in code review: double dispatch emails, double sign-ups, retrying a half-sent announcement |
 | `track.test.mjs` | Track your order: matching by number and mobile, what it reveals, rate limit |
 | `middleware.test.mjs` | Admin sign-in, cookies, lockout, and that the file stays self-contained for the edge runtime |
-| `build.test.mjs` | Generated pages are up to date, and no internal link is broken |
-| `e2e.test.mjs` | In Chromium: the demo shop, policy pages, phone widths, and a live order followed through Track your order |
+| `build.test.mjs` | Generated pages are up to date, no internal link or `srcset` entry is broken, every photo has its smaller copies, every icon is in the icon font, and no page loads fonts or icons from another site |
+| `monitor.test.mjs` | Sentry reports: DSN parsing, stack frames, the envelope format, route and email failures reported, nothing sent without a DSN, no personal details |
+| `e2e.test.mjs` | In Chromium: the demo shop, policy pages, phone widths, a live order followed through Track your order, and a page error reaching Sentry |
 | `vercel-output.test.mjs` | The output of `vercel build`: functions as Vercel compiles them, the middleware inside Vercel's edge runtime |
 
 The last two are skipped unless their tools are present. To run them too:

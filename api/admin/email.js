@@ -8,6 +8,7 @@ import { storeReady } from "../_lib/store.js";
 import { adminGuard, json } from "../_lib/auth.js";
 import { emailConfig, lastEmailError, clearAlertError, sendTestEmail, sendAnnouncement } from "../_lib/email.js";
 import { listSubscribers, removeSubscriber, unsubscribeUrl } from "../_lib/subscribers.js";
+import { reportError } from "../_lib/monitor.js";
 
 export async function GET(request) {
   const denied = await adminGuard(request, storeReady);
@@ -20,7 +21,7 @@ export async function GET(request) {
       subscribers: subscribers.map((s) => ({ email: s.email, at: s.at })),
     });
   } catch (e) {
-    console.error("email status failed", e);
+    await reportError("email status failed", e, request);
     return json({ error: "Email settings could not be loaded." }, 500);
   }
 }
@@ -48,7 +49,7 @@ export async function POST(request) {
       const result = await sendAnnouncement(list.map((s) => ({ email: s.email, unsubscribeUrl: unsubscribeUrl(site, s.token) })), subject, message);
       return json({ ...result, total: list.length });
     } catch (e) {
-      console.error("announce failed", e);
+      await reportError("announce failed", e, request);
       return json({ error: "The announcement could not be sent." }, 500);
     }
   }
@@ -64,7 +65,7 @@ export async function DELETE(request) {
   try {
     return json({ removed: await removeSubscriber(String(body.email || "").toLowerCase()) });
   } catch (e) {
-    console.error("remove subscriber failed", e);
+    await reportError("remove subscriber failed", e, request);
     return json({ error: "Could not remove that address." }, 500);
   }
 }

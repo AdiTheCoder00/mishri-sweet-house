@@ -57,6 +57,14 @@ const reRoot = (html, base) =>
 /* ---------------- helpers ---------------- */
 
 const slug = (s) => s.toLowerCase().replace(/[^\w]+/g, "-").replace(/^-|-$/g, "");
+// Photos come in 200, 400 and 600px copies next to the 800px original
+// (tools/resize-images.mjs); the browser picks the smallest that is sharp.
+const sized = (img, w) => img.replace(/\.webp$/, `-${w}.webp`);
+const imgSrc = (base, img, sizes) =>
+  /\.webp$/.test(img)
+    ? `src="${base}${img}" srcset="${[200, 400, 600].map((w) => `${base}${sized(img, w)} ${w}w`).join(", ")}, ${base}${img} 800w" sizes="${sizes}"`
+    : `src="${base}${img}"`;
+
 const esc = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const inr = (n) => "₹" + n.toLocaleString("en-IN");
@@ -169,11 +177,10 @@ ${meta.map(([k, v]) => `  <meta property="${k}" content="${esc(v)}" />\n`).join(
   <meta name="twitter:description" content="${esc(description)}" />
   <meta name="twitter:image" content="${image}" />
 
-  <link rel="preconnect" href="https://api.fontshare.com" />
-  <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
-  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@500,600,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/light/style.css" />
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css" />
+  <link rel="preload" href="${base}vendor/fonts/switzer-400.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="${base}vendor/fonts/clash-display-600.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="${base}vendor/fonts/fonts.css" />
+  <link rel="stylesheet" href="${base}vendor/phosphor/icons.css" />
   <!-- Vercel Web Analytics: page views only, no cookies. Enable it under the project's Analytics tab. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -199,6 +206,7 @@ ${reRoot(CHROME_FOOT, base)}
 
   <script src="${base}products.js"></script>
   <script src="${base}api/store"></script>
+  <script src="${base}monitor.js"></script>
   <script src="${base}store-settings.js"></script>
   <script src="${base}vendor/lenis/lenis.min.js"></script>
   <script src="${base}smooth-scroll.js"></script>
@@ -288,7 +296,7 @@ function productPage(p, kind) {
 ${crumbs(trail, base)}
         <div class="pdp-grid">
           <figure class="pdp-media">
-            <img src="${base}${p.img}" alt="${esc(p.name)}: ${esc(p.desc.split(". ")[0].replace(/\.$/, ""))}" width="800" height="800" fetchpriority="high" />
+            <img ${imgSrc(base, p.img, "(min-width: 1200px) 560px, (min-width: 900px) 45vw, 100vw")} alt="${esc(p.name)}: ${esc(p.desc.split(". ")[0].replace(/\.$/, ""))}" width="800" height="800" fetchpriority="high" />
           </figure>
 
           <div class="pdp-copy">
@@ -331,7 +339,7 @@ ${crumbs(trail, base)}
 ${related
   .map(
     (r) => `            <li><a href="${base}${r.page}">
-              <img src="${base}${r.img}" alt="" width="200" height="200" loading="lazy" />
+              <img ${imgSrc(base, r.img, "200px")} alt="" width="200" height="200" loading="lazy" />
               <span>${esc(r.name)}</span><span class="rel-price">${inr(r.price)}</span>
             </a></li>`
   )
@@ -413,7 +421,7 @@ ${items
             <div class="bezel"><div class="bezel-core">
               <a class="plp-link" href="${base}${p.page}">
                 <div class="product-media">
-                  <img src="${base}${p.img}" alt="${esc(p.name)}" width="800" height="800" loading="lazy" />
+                  <img ${imgSrc(base, p.img, "(min-width: 1100px) 300px, (min-width: 768px) 33vw, 50vw")} alt="${esc(p.name)}" width="800" height="800" loading="lazy" />
                   ${p.tag ? `<span class="product-tag">${esc(p.tag)}</span>` : ""}
                 </div>
                 <div class="product-body">

@@ -2,3 +2,4 @@
 tests/
 .github/
 node_modules/
+tools/
